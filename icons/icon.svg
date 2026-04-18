@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" rx="96" fill="#0e1117"/>
+  <g transform="translate(96 128)">
+    <rect x="0" y="0" width="107" height="256" fill="#009246"/>
+    <rect x="107" y="0" width="106" height="256" fill="#FFFFFF"/>
+    <rect x="213" y="0" width="107" height="256" fill="#CE2B37"/>
+  </g>
+  <text x="256" y="448" font-family="Georgia, serif" font-size="64" font-weight="700" fill="#f0c040" text-anchor="middle">Italiano</text>
+</svg>
