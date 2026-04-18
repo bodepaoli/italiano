@@ -1176,4 +1176,95 @@ const VOCAB = [
   // ── FARE EXPRESSIONS (1) ──
   {it:"faccio la valigia",en:"I pack my suitcase",type:"t-phrase",cat:"FARE Expressions",note:"idiomatic",ex:"Faccio la valigia per il viaggio."},
 
+
+
+  // ═══════════════════════════════════════════════════════════════
+  // WAVE 4 — Catania lesson vocab (2026-04-18)
+  // ═══════════════════════════════════════════════════════════════
+
+  // ── VERBS (4) ──
+  {it:"forzare",en:"to force (physical)",type:"t-are",cat:"Verbs",note:"forzo, forzi, forza, forziamo, forzate, forzano",ex:"Non forzare la porta!"},
+  {it:"costringere",en:"to force / compel",type:"t-ere",cat:"Verbs",note:"costringo, costringi, costringe — often takes 'a + inf.'",ex:"Mi hanno costretto a venire."},
+  {it:"obbligare",en:"to oblige / force",type:"t-are",cat:"Verbs",note:"obbligo, obblighi, obbliga — takes 'a + inf.'",ex:"Nessuno ti obbliga."},
+  {it:"iniziare",en:"to start / begin",type:"t-are",cat:"Verbs",note:"inizio, inizi, inizia — use 'a + inf.' for 'start to'",ex:"Vorrei iniziare con..."},
+
+  // ── PHRASES (27) ──
+  {it:"Sono in anticipo.",en:"I'm early.",type:"t-phrase",cat:"Phrases",note:"anticipo = advance / ahead",ex:""},
+  {it:"Sono in ritardo.",en:"I'm late.",type:"t-phrase",cat:"Phrases",note:"ritardo = delay",ex:""},
+  {it:"Sono puntuale.",en:"I'm on time.",type:"t-phrase",cat:"Phrases",note:"",ex:""},
+  {it:"Mi dispiace.",en:"I'm sorry.",type:"t-phrase",cat:"Phrases",note:"'mi dispiace molto' = I'm very sorry",ex:""},
+  {it:"Funziona.",en:"It works / that works.",type:"t-phrase",cat:"Phrases",note:"from funzionare",ex:"Funziona perfettamente."},
+  {it:"Cioè...",en:"Like... / I mean...",type:"t-phrase",cat:"Phrases",note:"buy time while thinking",ex:""},
+  {it:"Non so dove aspettare.",en:"I don't know where to wait.",type:"t-phrase",cat:"Phrases",note:"",ex:""},
+  {it:"Ho molta strada da fare.",en:"I have a long way to go.",type:"t-phrase",cat:"Phrases",note:"literal + metaphorical",ex:""},
+  {it:"Sono solo all'inizio.",en:"I'm just at the beginning.",type:"t-phrase",cat:"Phrases",note:"inizio = beginning",ex:""},
+  {it:"Torno l'anno prossimo.",en:"I'll be back next year.",type:"t-phrase",cat:"Phrases",note:"uses present tense for future (very Italian)",ex:""},
+  {it:"Ci vediamo la prossima volta.",en:"See you next time.",type:"t-phrase",cat:"Phrases",note:"",ex:""},
+  {it:"Ci vediamo domani.",en:"See you tomorrow.",type:"t-phrase",cat:"Phrases",note:"",ex:""},
+  {it:"Mi fa male la testa.",en:"My head hurts.",type:"t-phrase",cat:"Phrases",note:"'fare male' = to hurt. Singular body part → fa. Plural → fanno",ex:""},
+  {it:"Mi fa male la schiena.",en:"My back hurts.",type:"t-phrase",cat:"Phrases",note:"",ex:""},
+  {it:"Mi fa male lo stomaco.",en:"My stomach hurts.",type:"t-phrase",cat:"Phrases",note:"",ex:""},
+  {it:"Mi fanno male i piedi.",en:"My feet hurt.",type:"t-phrase",cat:"Phrases",note:"plural → fanno",ex:""},
+  {it:"Con ghiaccio.",en:"With ice.",type:"t-phrase",cat:"Phrases",note:"",ex:""},
+  {it:"Senza ghiaccio.",en:"Without ice.",type:"t-phrase",cat:"Phrases",note:"",ex:""},
+  {it:"Posso avere del ghiaccio?",en:"Can I have some ice?",type:"t-phrase",cat:"Phrases",note:"'del' = some (partitive)",ex:""},
+  {it:"Una pallina di...",en:"One scoop of...",type:"t-phrase",cat:"Phrases",note:"followed by flavor: 'una pallina di pistacchio'",ex:""},
+  {it:"Due palline",en:"Two scoops",type:"t-phrase",cat:"Phrases",note:"",ex:""},
+  {it:"In cono o in coppetta?",en:"Cone or cup?",type:"t-phrase",cat:"Phrases",note:"standard gelato question",ex:""},
+  {it:"Posso assaggiare?",en:"Can I taste?",type:"t-phrase",cat:"Phrases",note:"assaggiare = to taste / sample — gelaterias let you try",ex:""},
+  {it:"Quale gusto?",en:"Which flavor?",type:"t-phrase",cat:"Phrases",note:"quale = which",ex:""},
+  {it:"Vorrei iniziare con...",en:"I'd like to start with...",type:"t-phrase",cat:"Phrases",note:"",ex:""},
+  {it:"Come primo vorrei...",en:"As a first course I'd like...",type:"t-phrase",cat:"Phrases",note:"ordering pattern",ex:""},
+  {it:"Come antipasto vorrei...",en:"As a starter I'd like...",type:"t-phrase",cat:"Phrases",note:"",ex:""},
+
+  // ── STRUCTURE (11) ──
+  {it:"perciò",en:"therefore / so",type:"t-structure",cat:"Structure",note:"written form more than spoken",ex:"Piove, perciò resto a casa."},
+  {it:"tanto",en:"so much / anyway",type:"t-structure",cat:"Structure",note:"'tanto non viene' = he's not coming anyway",ex:""},
+  {it:"dopo",en:"after / then",type:"t-structure",cat:"Structure",note:"preposition + adverb",ex:"Ci vediamo dopo!"},
+  {it:"cioè",en:"like / I mean (filler)",type:"t-structure",cat:"Structure",note:"'that is' — clarifying yourself",ex:"Cioè..."},
+  {it:"come",en:"like / as / how",type:"t-structure",cat:"Structure",note:"comparison + question word",ex:"Come te! (Like you!)"},
+  {it:"indietro",en:"backward / back (direction)",type:"t-structure",cat:"Structure",note:"direction: 'torna indietro' = come back",ex:""},
+  {it:"questo / questa",en:"this",type:"t-structure",cat:"Structure",note:"questo (m.) / questa (f.) before nouns",ex:"Questo libro, questa penna."},
+  {it:"questi / queste",en:"these",type:"t-structure",cat:"Structure",note:"questi (m.pl.) / queste (f.pl.)",ex:"Questi libri, queste penne."},
+  {it:"quello / quella",en:"that",type:"t-structure",cat:"Structure",note:"quello (m.) / quella (f.) — note: 'quello' follows article rules like 'bello' (quel, quell', quello)",ex:"Quella macchina è bella."},
+  {it:"quelli / quelle",en:"those",type:"t-structure",cat:"Structure",note:"quelli (m.pl.) / quelle (f.pl.) — as adjective before noun: quei/quegli/quelle",ex:""},
+  {it:"qui / qua",en:"here",type:"t-structure",cat:"Structure",note:"interchangeable — qui slightly more precise, qua more general",ex:"Sono qui! / Vieni qua!"},
+
+  // ── ADJECTIVES (2) ──
+  {it:"distrutto / distrutta",en:"destroyed / exhausted",type:"t-adj",cat:"Adjectives",note:"past participle of distruggere — colloquial for 'wiped out'",ex:"Sono distrutto oggi."},
+  {it:"puntuale",en:"on time / punctual",type:"t-adj",cat:"Adjectives",note:"-e type (same m./f.)",ex:"Sono puntuale."},
+
+  // ── PREPOSITIONS (1) ──
+  {it:"dietro",en:"behind / in the back",type:"t-prep",cat:"Prepositions",note:"'dietro di me' = behind me",ex:""},
+
+  // ── NOUNS (15) ──
+  {it:"il ghiaccio",en:"ice",type:"t-structure",cat:"Nouns",note:"(m.) no plural",ex:"Con ghiaccio, per favore."},
+  {it:"i piedi",en:"feet",type:"t-structure",cat:"Nouns",note:"(m.pl.) sing. il piede",ex:"Mi fanno male i piedi."},
+  {it:"il piede",en:"foot",type:"t-structure",cat:"Nouns",note:"(m.) pl. i piedi",ex:""},
+  {it:"la schiena",en:"back (body)",type:"t-structure",cat:"Nouns",note:"(f.)",ex:"Mi fa male la schiena."},
+  {it:"la pallina",en:"scoop (of gelato)",type:"t-structure",cat:"Nouns",note:"(f.) diminutive of palla (ball)",ex:"Una pallina di fragola."},
+  {it:"il cono",en:"cone (ice-cream)",type:"t-structure",cat:"Nouns",note:"(m.)",ex:"In cono o in coppetta?"},
+  {it:"la coppetta",en:"cup (ice-cream)",type:"t-structure",cat:"Nouns",note:"(f.) diminutive of coppa",ex:""},
+  {it:"il gusto",en:"flavor / taste",type:"t-structure",cat:"Nouns",note:"(m.)",ex:"Quale gusto?"},
+  {it:"l'antipasto",en:"starter / appetizer",type:"t-structure",cat:"Nouns",note:"(m.) l'antipasto / gli antipasti",ex:"Come antipasto vorrei..."},
+  {it:"il primo",en:"first course (pasta/soup)",type:"t-structure",cat:"Nouns",note:"(m.) short for 'il primo piatto'",ex:"Come primo vorrei..."},
+  {it:"il secondo",en:"second course (meat/fish)",type:"t-structure",cat:"Nouns",note:"(m.) short for 'il secondo piatto'",ex:""},
+  {it:"il contorno",en:"side dish",type:"t-structure",cat:"Nouns",note:"(m.)",ex:""},
+  {it:"il dolce",en:"dessert",type:"t-structure",cat:"Nouns",note:"(m.) also means 'sweet' (adj.)",ex:""},
+  {it:"l'anno",en:"year",type:"t-structure",cat:"Nouns",note:"(m.) l'anno / gli anni",ex:"Torno l'anno prossimo."},
+  {it:"la strada",en:"road / way / street",type:"t-structure",cat:"Nouns",note:"(f.)",ex:"Ho molta strada da fare."},
+
+  // ── TIME (5) ──
+  {it:"la prossima volta",en:"next time",type:"t-structure",cat:"Time",note:"'prossimo/a' always agrees in gender",ex:""},
+  {it:"l'anno prossimo",en:"next year",type:"t-structure",cat:"Time",note:"",ex:""},
+  {it:"la settimana prossima",en:"next week",type:"t-structure",cat:"Time",note:"",ex:""},
+  {it:"il mese prossimo",en:"next month",type:"t-structure",cat:"Time",note:"",ex:""},
+  {it:"la prossima fermata",en:"the next stop",type:"t-structure",cat:"Time",note:"useful on bus / train",ex:""},
+
+  // ── TRICKY PAIRS (4) ──
+  {it:"allora / quindi / così / dunque / perciò",en:"'so' — the five common Italian words",type:"t-structure",cat:"Tricky Pairs",note:"allora = conversational (Allora, andiamo?) | quindi = logical (Piove, quindi resto a casa) | così = 'like this / in this way' (Fai così!) | dunque = formal (Dunque, cominciamo) | perciò = therefore, mostly written",ex:"Allora, cosa facciamo? / Studio, quindi imparo."},
+  {it:"come / tipo / cioè",en:"'like' — three uses",type:"t-structure",cat:"Tricky Pairs",note:"come = like/as (comparison: 'come te') | tipo = casual filler ('ero tipo stanco') | cioè = 'I mean' / clarifying (cioè...)",ex:"Parla come un italiano!"},
+  {it:"poi / dopo / di / che",en:"'then' and 'than'",type:"t-structure",cat:"Tricky Pairs",note:"poi = then (time sequence: e poi...) | dopo = after / then (Ci vediamo dopo) | di = than, before a noun (più alto DI Marco) | che = than, before a verb / adjective (meglio CHE niente)",ex:"Prima studio, poi mangio."},
+  {it:"schiena / tornare / indietro / dietro",en:"'back' — four different meanings",type:"t-structure",cat:"Tricky Pairs",note:"la schiena = back (body) | tornare = to come/go back | indietro = backward (direction) | dietro = behind / in the back (position)",ex:"Torna indietro! / Dietro di me."},
+
 ];
