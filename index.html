@@ -125,9 +125,15 @@
   .modal-close { width: 100%; margin-top: 16px; padding: 10px; background: var(--dark3); border: 1px solid var(--border); border-radius: 10px; color: var(--muted); cursor: pointer; font-family: 'DM Sans', sans-serif; transition: all 0.2s; }
   .modal-close:hover { border-color: var(--accent); color: var(--accent); }
 
-  .conj-table { display: grid; grid-template-columns: auto 1fr; gap: 4px 14px; background: var(--dark3); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; margin-top: 4px; font-size: 0.9rem; }
+  .conj-table { display: grid; grid-template-columns: auto 1fr; gap: 4px 14px; background: var(--dark3); border: 1px solid var(--border); border-radius: 0 0 10px 10px; padding: 12px 14px; margin-top: 0; font-size: 0.9rem; }
   .conj-pronoun { color: var(--muted); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; align-self: center; }
   .conj-form { color: var(--white); font-weight: 500; font-family: 'Playfair Display', serif; }
+  .tense-tabs { display: flex; gap: 2px; overflow-x: auto; scrollbar-width: none; background: var(--dark3); border: 1px solid var(--border); border-bottom: none; border-radius: 10px 10px 0 0; padding: 4px 4px 0; }
+  .tense-tabs::-webkit-scrollbar { display: none; }
+  .tense-tab { padding: 6px 10px; font-size: 0.75rem; font-weight: 500; color: var(--muted); cursor: pointer; border-radius: 6px 6px 0 0; white-space: nowrap; transition: all 0.15s; border: none; background: transparent; font-family: inherit; }
+  .tense-tab:hover { color: var(--text); }
+  .tense-tab.active { background: var(--card); color: var(--accent); }
+  .tense-hint { font-size: 0.7rem; color: var(--muted); font-style: italic; padding: 8px 14px 0; }
   .pattern-words { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 12px; margin-top: 4px; }
   .pattern-word { padding: 6px 10px; background: var(--dark3); border: 1px solid var(--border); border-radius: 8px; font-size: 0.8rem; display: flex; justify-content: space-between; gap: 8px; }
   .pattern-word-it { color: var(--white); font-weight: 500; }
@@ -188,6 +194,43 @@ let quizIndex = 0;
 let quizScore = 0;
 let quizAnswered = false;
 let selectedModal = null;
+let activeTense = 'pres';
+
+const TENSE_META = {
+  pres:   { label: 'Presente',    hint: 'what happens right now' },
+  past:   { label: 'Passato',     hint: "passato prossimo — 'I did / I have done'" },
+  imperf: { label: 'Imperfetto',  hint: "imperfect past — 'I used to / I was doing'" },
+  fut:    { label: 'Futuro',      hint: "simple future — 'I will'" },
+  cond:   { label: 'Condizionale',hint: "conditional — 'I would'" },
+};
+const PRONOUNS = ['io','tu','lui / lei','noi','voi','loro'];
+
+function setTense(t) {
+  activeTense = t;
+  renderModal();
+}
+
+function renderTenses(tenses, modalIdx) {
+  const order = ['pres','past','imperf','fut','cond'];
+  const tabs = order.filter(t => tenses[t]).map(t =>
+    `<button class="tense-tab ${t===activeTense?'active':''}" onclick="setTense('${t}')">${TENSE_META[t].label}</button>`
+  ).join('');
+  const cur = tenses[activeTense] || tenses.pres;
+  const meta = TENSE_META[activeTense] || TENSE_META.pres;
+  return `
+    <div class="modal-section">
+      <div class="modal-label">Conjugation</div>
+      <div class="tense-tabs">${tabs}</div>
+      <div class="conj-table">
+        ${cur.map((form, i) => `
+          <div class="conj-pronoun">${PRONOUNS[i]}</div>
+          <div class="conj-form">${form}</div>
+        `).join('')}
+      </div>
+      <div class="tense-hint">${meta.hint}</div>
+    </div>
+  `;
+}
 
 const CATS = ['All', 'Verbs', 'Phrases', 'Structure', 'Nouns', 'Adjectives', 'Colors', 'Prepositions', 'Articles', 'Numbers', 'Time', 'Tricky Pairs', 'Word Patterns', 'FARE Expressions'];
 
@@ -373,6 +416,7 @@ function answerQuiz(i, btn) {
 
 function openModal(idx) {
   selectedModal = idx;
+  activeTense = 'pres';
   renderModal();
 }
 
@@ -405,19 +449,7 @@ function renderModal() {
             </div>
           </div>
         ` : ''}
-        ${d.conj ? `
-          <div class="modal-section">
-            <div class="modal-label">Present tense conjugation</div>
-            <div class="conj-table">
-              <div class="conj-pronoun">io</div><div class="conj-form">${d.conj.io}</div>
-              <div class="conj-pronoun">tu</div><div class="conj-form">${d.conj.tu}</div>
-              <div class="conj-pronoun">lui / lei</div><div class="conj-form">${d.conj.lui}</div>
-              <div class="conj-pronoun">noi</div><div class="conj-form">${d.conj.noi}</div>
-              <div class="conj-pronoun">voi</div><div class="conj-form">${d.conj.voi}</div>
-              <div class="conj-pronoun">loro</div><div class="conj-form">${d.conj.loro}</div>
-            </div>
-          </div>
-        ` : ''}
+        ${d.tenses ? renderTenses(d.tenses, selectedModal) : ''}
         <div style="display:flex;gap:8px;margin-top:12px">
           <button class="${knownWords.has(d.it)?'unsure-btn':'known-btn'}" style="flex:1" onclick="toggleKnown(${selectedModal});renderModal()">
             ${knownWords.has(d.it) ? '↩ Unmark' : '✓ Mark as known'}
