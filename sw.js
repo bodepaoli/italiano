@@ -1,8 +1,9 @@
-const CACHE = 'italiano-v6';
+const CACHE = 'italiano-v7';
 const ASSETS = [
   './',
   'index.html',
   'vocab.js',
+  'cheatsheets.js',
   'manifest.json',
   'icons/icon-192.png',
   'icons/icon-512.png',
