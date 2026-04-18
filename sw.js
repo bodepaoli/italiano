@@ -1,4 +1,4 @@
-const CACHE = 'italiano-v7';
+const CACHE = 'italiano-v8';
 const ASSETS = [
   './',
   'index.html',
