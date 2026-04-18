@@ -125,6 +125,9 @@
   .modal-close { width: 100%; margin-top: 16px; padding: 10px; background: var(--dark3); border: 1px solid var(--border); border-radius: 10px; color: var(--muted); cursor: pointer; font-family: 'DM Sans', sans-serif; transition: all 0.2s; }
   .modal-close:hover { border-color: var(--accent); color: var(--accent); }
 
+  .conj-table { display: grid; grid-template-columns: auto 1fr; gap: 4px 14px; background: var(--dark3); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; margin-top: 4px; font-size: 0.9rem; }
+  .conj-pronoun { color: var(--muted); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; align-self: center; }
+  .conj-form { color: var(--white); font-weight: 500; font-family: 'Playfair Display', serif; }
   .pattern-words { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 12px; margin-top: 4px; }
   .pattern-word { padding: 6px 10px; background: var(--dark3); border: 1px solid var(--border); border-radius: 8px; font-size: 0.8rem; display: flex; justify-content: space-between; gap: 8px; }
   .pattern-word-it { color: var(--white); font-weight: 500; }
@@ -399,6 +402,19 @@ function renderModal() {
             <div class="modal-label">Common A1–A2 words (${d.words.length})</div>
             <div class="pattern-words">
               ${d.words.map(w => `<div class="pattern-word"><span class="pattern-word-it">${w.it}</span><span class="pattern-word-en">${w.en}</span></div>`).join('')}
+            </div>
+          </div>
+        ` : ''}
+        ${d.conj ? `
+          <div class="modal-section">
+            <div class="modal-label">Present tense conjugation</div>
+            <div class="conj-table">
+              <div class="conj-pronoun">io</div><div class="conj-form">${d.conj.io}</div>
+              <div class="conj-pronoun">tu</div><div class="conj-form">${d.conj.tu}</div>
+              <div class="conj-pronoun">lui / lei</div><div class="conj-form">${d.conj.lui}</div>
+              <div class="conj-pronoun">noi</div><div class="conj-form">${d.conj.noi}</div>
+              <div class="conj-pronoun">voi</div><div class="conj-form">${d.conj.voi}</div>
+              <div class="conj-pronoun">loro</div><div class="conj-form">${d.conj.loro}</div>
             </div>
           </div>
         ` : ''}
