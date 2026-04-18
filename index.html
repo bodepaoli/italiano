@@ -290,6 +290,15 @@ function saveKnown() {
   document.getElementById('known-count').textContent = knownWords.size;
 }
 
+const LEADING_ARTICLES = ["il ","lo ","la ","l'","i ","gli ","le ","un ","uno ","una ","un'"];
+function sortKey(s) {
+  let k = s.toLowerCase().trim();
+  for (const a of LEADING_ARTICLES) {
+    if (k.startsWith(a)) { k = k.slice(a.length); break; }
+  }
+  return k;
+}
+
 function getFiltered() {
   let items = DATA;
   if (currentCat !== 'All') items = items.filter(d => d.cat === currentCat);
@@ -297,7 +306,8 @@ function getFiltered() {
     const s = searchTerm.toLowerCase();
     items = items.filter(d => d.it.toLowerCase().includes(s) || d.en.toLowerCase().includes(s) || (d.note||'').toLowerCase().includes(s));
   }
-  return items;
+  // Alphabetical by Italian word (ignoring leading article)
+  return items.slice().sort((a, b) => sortKey(a.it).localeCompare(sortKey(b.it), 'it'));
 }
 
 function setTab(tab) {
