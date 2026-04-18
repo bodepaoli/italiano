@@ -125,6 +125,14 @@
   .modal-close { width: 100%; margin-top: 16px; padding: 10px; background: var(--dark3); border: 1px solid var(--border); border-radius: 10px; color: var(--muted); cursor: pointer; font-family: 'DM Sans', sans-serif; transition: all 0.2s; }
   .modal-close:hover { border-color: var(--accent); color: var(--accent); }
 
+  .pattern-words { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 12px; margin-top: 4px; }
+  .pattern-word { padding: 6px 10px; background: var(--dark3); border: 1px solid var(--border); border-radius: 8px; font-size: 0.8rem; display: flex; justify-content: space-between; gap: 8px; }
+  .pattern-word-it { color: var(--white); font-weight: 500; }
+  .pattern-word-en { color: var(--muted); font-size: 0.75rem; }
+  @media (max-width: 480px) { .pattern-words { grid-template-columns: 1fr; } }
+  .fc-words { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; margin-top: 4px; }
+  .fc-word-chip { padding: 4px 10px; background: var(--dark3); border: 1px solid var(--border); border-radius: 12px; font-size: 0.75rem; color: var(--text); }
+
   .empty { padding: 60px 20px; text-align: center; color: var(--muted); }
   .empty-big { font-size: 3rem; margin-bottom: 12px; }
 
@@ -178,7 +186,7 @@ let quizScore = 0;
 let quizAnswered = false;
 let selectedModal = null;
 
-const CATS = ['All', 'Verbs', 'Phrases', 'Structure', 'Adjectives', 'Colors', 'Prepositions', 'Tricky Pairs', 'Word Patterns', 'FARE Expressions'];
+const CATS = ['All', 'Verbs', 'Phrases', 'Structure', 'Nouns', 'Adjectives', 'Colors', 'Prepositions', 'Articles', 'Numbers', 'Tricky Pairs', 'Word Patterns', 'FARE Expressions'];
 
 function saveKnown() {
   localStorage.setItem('known', JSON.stringify([...knownWords]));
@@ -264,6 +272,7 @@ function renderFlashcard() {
         <div class="fc-divider"></div>
         <div class="fc-english">${item.en}</div>
         ${item.note ? `<div class="fc-note">💡 ${item.note}</div>` : ''}
+        ${item.words && item.words.length ? `<div class="fc-words">${item.words.slice(0,10).map(w=>`<span class="fc-word-chip">${w.it}</span>`).join('')}${item.words.length>10?`<span class="fc-word-chip" style="color:var(--muted)">+${item.words.length-10} more</span>`:''}</div>` : ''}
         ${item.ex ? `<div class="fc-example">💬 ${item.ex}</div>` : ''}
       </div>
       <div class="fc-nav">
@@ -383,6 +392,14 @@ function renderModal() {
           <div class="modal-section">
             <div class="modal-label">Example</div>
             <div class="modal-ex">${d.ex}</div>
+          </div>
+        ` : ''}
+        ${d.words && d.words.length ? `
+          <div class="modal-section">
+            <div class="modal-label">Common A1–A2 words (${d.words.length})</div>
+            <div class="pattern-words">
+              ${d.words.map(w => `<div class="pattern-word"><span class="pattern-word-it">${w.it}</span><span class="pattern-word-en">${w.en}</span></div>`).join('')}
+            </div>
           </div>
         ` : ''}
         <div style="display:flex;gap:8px;margin-top:12px">
