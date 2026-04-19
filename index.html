@@ -331,6 +331,7 @@ function matchesEntry(d, s) {
   if (d.en.toLowerCase().includes(s)) return true;
   if ((d.note || '').toLowerCase().includes(s)) return true;
   if ((d.ex || '').toLowerCase().includes(s)) return true;
+  if ((d.aliases || '').toLowerCase().includes(s)) return true;
   // Conjugated forms across all 5 tenses
   if (d.tenses) {
     for (const t of ['pres','past','imperf','fut','cond']) {
