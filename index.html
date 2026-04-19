@@ -136,8 +136,10 @@
   .tense-grid th { color: var(--accent); font-weight: 600; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.5px; padding: 10px 12px; border-bottom: 1px solid var(--border); background: var(--dark2); text-align: left; white-space: nowrap; position: sticky; top: 0; }
   .tense-grid td { padding: 8px 12px; border-bottom: 1px solid var(--border); vertical-align: top; white-space: nowrap; }
   .tense-grid tr:last-child td { border-bottom: none; }
-  .tg-pronoun { color: var(--muted); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; background: var(--dark2); position: sticky; left: 0; border-right: 1px solid var(--border); }
-  .tg-form { color: var(--white); font-family: 'Playfair Display', serif; font-weight: 500; }
+  .tg-pronoun { color: var(--muted); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; background: var(--dark2); position: sticky; left: 0; border-right: 1px solid var(--border); vertical-align: middle; }
+  .tg-form { line-height: 1.2; }
+  .tg-it { color: var(--white); font-family: 'Playfair Display', serif; font-weight: 500; font-size: 0.92rem; }
+  .tg-en { color: var(--muted); font-size: 0.72rem; font-style: italic; margin-top: 2px; }
   .tense-hint { font-size: 0.7rem; color: var(--muted); font-style: italic; margin-top: 6px; padding: 0 4px; }
   .ex-list { display: flex; flex-direction: column; gap: 8px; }
   .ex-row { display: grid; grid-template-columns: 90px 1fr; gap: 10px 14px; align-items: baseline; padding: 8px 12px; background: var(--dark3); border: 1px solid var(--border); border-radius: 8px; }
@@ -291,13 +293,17 @@ function renderExamples(examples) {
   `;
 }
 
-function renderTenses(tenses, modalIdx) {
+function renderTenses(tenses, tensesEn, modalIdx) {
   const order = ['pres','past','imperf','fut','cond'];
   const active = order.filter(t => tenses[t]);
   const headerRow = '<tr><th></th>' + active.map(t => `<th>${TENSE_META[t].label}</th>`).join('') + '</tr>';
   const bodyRows = PRONOUNS.map((pronoun, i) =>
     `<tr><td class="tg-pronoun">${pronoun}</td>` +
-    active.map(t => `<td class="tg-form">${hl(tenses[t][i] || '')}</td>`).join('') +
+    active.map(t => {
+      const it = tenses[t][i] || '';
+      const en = (tensesEn && tensesEn[t] && tensesEn[t][i]) || '';
+      return `<td class="tg-form"><div class="tg-it">${hl(it)}</div>${en ? `<div class="tg-en">${hl(en)}</div>` : ''}</td>`;
+    }).join('') +
     '</tr>'
   ).join('');
   return `
@@ -654,7 +660,7 @@ function renderModal() {
             </div>
           </div>
         ` : ''}
-        ${d.tenses ? renderTenses(d.tenses, selectedModal) : ''}
+        ${d.tenses ? renderTenses(d.tenses, d.tensesEn, selectedModal) : ''}
         ${d.examples ? renderExamples(d.examples) : ''}
         <div style="display:flex;gap:8px;margin-top:12px">
           <button class="${knownWords.has(d.it)?'unsure-btn':'known-btn'}" style="flex:1" onclick="toggleKnown(${selectedModal});renderModal()">
