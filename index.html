@@ -326,14 +326,31 @@ function sortKey(s) {
   return k;
 }
 
+function matchesEntry(d, s) {
+  if (d.it.toLowerCase().includes(s)) return true;
+  if (d.en.toLowerCase().includes(s)) return true;
+  if ((d.note || '').toLowerCase().includes(s)) return true;
+  if ((d.ex || '').toLowerCase().includes(s)) return true;
+  // Conjugated forms across all 5 tenses
+  if (d.tenses) {
+    for (const t of ['pres','past','imperf','fut','cond']) {
+      if (d.tenses[t] && d.tenses[t].some(f => f.toLowerCase().includes(s))) return true;
+    }
+  }
+  // Auto-generated example sentences (Italian + English per tense)
+  if (d.examples && d.examples.some(e => e.it.toLowerCase().includes(s) || e.en.toLowerCase().includes(s))) return true;
+  // Pattern nested word lists (e.g. -tion → -zione contains "nazione")
+  if (d.words && d.words.some(w => w.it.toLowerCase().includes(s) || w.en.toLowerCase().includes(s))) return true;
+  return false;
+}
+
 function getFiltered() {
   let items = DATA;
   if (currentCat !== 'All') items = items.filter(d => d.cat === currentCat);
   if (searchTerm) {
     const s = searchTerm.toLowerCase();
-    items = items.filter(d => d.it.toLowerCase().includes(s) || d.en.toLowerCase().includes(s) || (d.note||'').toLowerCase().includes(s));
+    items = items.filter(d => matchesEntry(d, s));
   }
-  // Alphabetical by Italian word (ignoring leading article)
   return items.slice().sort((a, b) => sortKey(a.it).localeCompare(sortKey(b.it), 'it'));
 }
 
