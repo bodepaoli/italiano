@@ -141,6 +141,7 @@
   .ex-label { color: var(--accent); font-size: 0.7rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.6px; }
   .ex-italian { color: var(--white); font-family: 'Playfair Display', serif; font-size: 0.95rem; font-style: italic; }
   .ex-english { color: var(--muted); font-size: 0.82rem; grid-column: 2; margin-top: 2px; }
+  mark { background: rgba(240,192,64,0.85); color: var(--dark); border-radius: 3px; padding: 0 3px; font-weight: 600; }
   @media (max-width: 480px) {
     .ex-row { grid-template-columns: 1fr; gap: 2px; }
     .ex-english { grid-column: 1; }
@@ -278,8 +279,8 @@ function renderExamples(examples) {
         ${examples.map((ex, i) => `
           <div class="ex-row">
             <div class="ex-label">${labels[i]}</div>
-            <div class="ex-italian">${ex.it}</div>
-            <div class="ex-english">${ex.en}</div>
+            <div class="ex-italian">${hl(ex.it)}</div>
+            <div class="ex-english">${hl(ex.en)}</div>
           </div>
         `).join('')}
       </div>
@@ -293,7 +294,7 @@ function renderTenses(tenses, modalIdx) {
   const headerRow = '<tr><th></th>' + active.map(t => `<th>${TENSE_META[t].label}</th>`).join('') + '</tr>';
   const bodyRows = PRONOUNS.map((pronoun, i) =>
     `<tr><td class="tg-pronoun">${pronoun}</td>` +
-    active.map(t => `<td class="tg-form">${tenses[t][i] || ''}</td>`).join('') +
+    active.map(t => `<td class="tg-form">${hl(tenses[t][i] || '')}</td>`).join('') +
     '</tr>'
   ).join('');
   return `
@@ -324,6 +325,18 @@ function sortKey(s) {
     if (k.startsWith(a)) { k = k.slice(a.length); break; }
   }
   return k;
+}
+
+function escapeHtml(s) {
+  return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+function hl(text) {
+  // Highlight current searchTerm matches inside `text`. Always returns HTML-safe string.
+  const escaped = escapeHtml(text);
+  if (!searchTerm) return escaped;
+  const safe = searchTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  return escaped.replace(new RegExp(`(${safe})`, 'gi'), '<mark>$1</mark>');
 }
 
 function matchesEntry(d, s) {
@@ -397,9 +410,9 @@ function renderBrowse() {
     <div class="browse-grid">
       ${items.map(d => `
         <div class="word-card${knownWords.has(d.it)?' known':''}" onclick="openModal(${DATA.indexOf(d)})">
-          <div class="word-card-it">${d.it}</div>
-          <div class="word-card-en">${d.en}</div>
-          ${d.note ? `<div class="word-card-note">${d.note.length > 60 ? d.note.substring(0,60)+'...' : d.note}</div>` : ''}
+          <div class="word-card-it">${hl(d.it)}</div>
+          <div class="word-card-en">${hl(d.en)}</div>
+          ${d.note ? `<div class="word-card-note">${hl(d.note.length > 60 ? d.note.substring(0,60)+'...' : d.note)}</div>` : ''}
           <span class="word-card-type ${d.type}">${d.cat}</span>
           ${knownWords.has(d.it) ? '<span style="float:right;font-size:1rem">✓</span>' : ''}
         </div>
@@ -612,26 +625,26 @@ function renderModal() {
   document.getElementById('modal').innerHTML = `
     <div class="modal-overlay" onclick="if(event.target===this){selectedModal=null;renderModal()}">
       <div class="modal${d.tenses ? ' wide' : ''}">
-        <div class="modal-it">${d.it}</div>
-        <div class="modal-en">${d.en}</div>
+        <div class="modal-it">${hl(d.it)}</div>
+        <div class="modal-en">${hl(d.en)}</div>
         <span class="word-card-type ${d.type}" style="margin-bottom:16px;display:inline-block">${d.cat}</span>
         ${d.note ? `
           <div class="modal-section">
             <div class="modal-label">Notes / Grammar</div>
-            <div class="modal-text">${d.note}</div>
+            <div class="modal-text">${hl(d.note)}</div>
           </div>
         ` : ''}
         ${d.ex ? `
           <div class="modal-section">
             <div class="modal-label">Example</div>
-            <div class="modal-ex">${d.ex}</div>
+            <div class="modal-ex">${hl(d.ex)}</div>
           </div>
         ` : ''}
         ${d.words && d.words.length ? `
           <div class="modal-section">
             <div class="modal-label">Common A1–A2 words (${d.words.length})</div>
             <div class="pattern-words">
-              ${d.words.map(w => `<div class="pattern-word"><span class="pattern-word-it">${w.it}</span><span class="pattern-word-en">${w.en}</span></div>`).join('')}
+              ${d.words.map(w => `<div class="pattern-word"><span class="pattern-word-it">${hl(w.it)}</span><span class="pattern-word-en">${hl(w.en)}</span></div>`).join('')}
             </div>
           </div>
         ` : ''}
@@ -658,9 +671,9 @@ function handleSearch(val) {
       ? '<div class="empty"><div class="empty-big">🤷</div>No results found.</div>'
       : items.map(d => `
         <div class="word-card${knownWords.has(d.it)?' known':''}" onclick="openModal(${DATA.indexOf(d)})">
-          <div class="word-card-it">${d.it}</div>
-          <div class="word-card-en">${d.en}</div>
-          ${d.note ? `<div class="word-card-note">${d.note.length > 60 ? d.note.substring(0,60)+'...' : d.note}</div>` : ''}
+          <div class="word-card-it">${hl(d.it)}</div>
+          <div class="word-card-en">${hl(d.en)}</div>
+          ${d.note ? `<div class="word-card-note">${hl(d.note.length > 60 ? d.note.substring(0,60)+'...' : d.note)}</div>` : ''}
           <span class="word-card-type ${d.type}">${d.cat}</span>
           ${knownWords.has(d.it) ? '<span style="float:right;font-size:1rem">✓</span>' : ''}
         </div>
