@@ -1396,4 +1396,61 @@ const VOCAB = [
   {it:"lo shopping",en:"shopping",type:"t-structure",cat:"Itangliano",note:"(m.) takes 'lo' because of sh- start",ex:"Vado a fare lo shopping."},
   {it:"OK",en:"OK!",type:"t-phrase",cat:"Itangliano",note:"used exactly like English",ex:""},
 
+
+
+  // ═══════════════════════════════════════════════════════════════
+  // WAVE 6 — gente / sorprese / che-expressions / word vocab (2026-04-20)
+  // ═══════════════════════════════════════════════════════════════
+
+  // ── PHRASES (18) ──
+  {it:"Avete...?",en:"Do you have...? (in a shop/restaurant)",type:"t-phrase",cat:"Phrases",note:"voi form of avere — what you ask staff",ex:"Avete un menù in inglese?"},
+  {it:"C'è tanta gente.",en:"There are so many people.",type:"t-phrase",cat:"Phrases",note:"gente is SINGULAR — c'è (not ci sono). 'tanta' agrees feminine.",ex:""},
+  {it:"C'è molta gente.",en:"There are a lot of people.",type:"t-phrase",cat:"Phrases",note:"singular gente → c'è. molta = molto in fem.",ex:""},
+  {it:"C'è troppa gente.",en:"There are too many people.",type:"t-phrase",cat:"Phrases",note:"singular construction — troppa is fem. of troppo",ex:""},
+  {it:"C'è poca gente.",en:"There are few people.",type:"t-phrase",cat:"Phrases",note:"poca = poco in fem.",ex:""},
+  {it:"Che sorpresa!",en:"What a surprise!",type:"t-phrase",cat:"Phrases",note:"'che + noun!' = 'what a ___!'",ex:""},
+  {it:"È una sorpresa.",en:"That's a surprise.",type:"t-phrase",cat:"Phrases",note:"",ex:""},
+  {it:"Questa è una sorpresa.",en:"This is a surprise.",type:"t-phrase",cat:"Phrases",note:"questa (f.) agrees with sorpresa (f.)",ex:""},
+  {it:"Mi hai sorpreso!",en:"You surprised me!",type:"t-phrase",cat:"Phrases",note:"sorprendere passato prossimo",ex:""},
+  {it:"Sono sorpreso / sorpresa.",en:"I'm surprised.",type:"t-phrase",cat:"Phrases",note:"sorpreso (m.) / sorpresa (f.) — agree with speaker",ex:""},
+  {it:"Che bello!",en:"How beautiful!",type:"t-phrase",cat:"Phrases",note:"'che + adjective!' = 'how ___!'",ex:""},
+  {it:"Che pazzo!",en:"What a madman! / How crazy!",type:"t-phrase",cat:"Phrases",note:"",ex:""},
+  {it:"Che buono!",en:"How delicious!",type:"t-phrase",cat:"Phrases",note:"used for food / drink",ex:""},
+  {it:"Che caldo!",en:"How hot! (weather)",type:"t-phrase",cat:"Phrases",note:"weather complaint — pair with 'che freddo!'",ex:""},
+  {it:"Qual è la parola giusta?",en:"What is the right word?",type:"t-phrase",cat:"Phrases",note:"qual è (NOT 'quale è') — 'qual' drops the e",ex:""},
+  {it:"Non conosco questa parola.",en:"I don't know this word.",type:"t-phrase",cat:"Phrases",note:"useful when learning — invites tutor to explain",ex:""},
+  {it:"Una parola alla volta.",en:"One word at a time.",type:"t-phrase",cat:"Phrases",note:"alla volta = at a time",ex:""},
+  {it:"Parola d'onore.",en:"Word of honor.",type:"t-phrase",cat:"Phrases",note:"d'onore = of honor (di + onore → d')",ex:""},
+
+  // ── STRUCTURE (1) ──
+  {it:"La gente è ___",en:"People are ___ (singular verb!)",type:"t-structure",cat:"Structure",note:"GENTE RULE: 'la gente' is grammatically SINGULAR even though it means 'people'. Use È / era / sarà — never sono. Wrong: ❌ la gente sono. Right: ✅ la gente è. If you need plural, use 'le persone sono'.",ex:"La gente è pazza."},
+
+  // ── ADJECTIVES (4) ──
+  {it:"sorprendente",en:"surprising",type:"t-adj",cat:"Adjectives",note:"-e type: sorprendente / sorprendenti",ex:""},
+  {it:"inaspettato / inaspettata",en:"unexpected",type:"t-adj",cat:"Adjectives",note:"4 forms: inaspettato/a/i/e",ex:""},
+  {it:"incredibile",en:"incredible",type:"t-adj",cat:"Adjectives",note:"-e type: incredibile / incredibili",ex:""},
+  {it:"sorpreso / sorpresa",en:"surprised",type:"t-adj",cat:"Adjectives",note:"4 forms — past participle of sorprendere",ex:"Sono sorpreso!"},
+
+  // ── NOUNS (11) ──
+  {it:"la gente",en:"people (singular!)",type:"t-structure",cat:"Nouns",note:"(f.) — TAKES SINGULAR VERB. La gente È pazza (NOT sono)",ex:"C'è tanta gente."},
+  {it:"le persone",en:"people / persons",type:"t-structure",cat:"Nouns",note:"(f.pl.) — when you need a plural verb, use this instead of gente",ex:"Le persone sono qui."},
+  {it:"il popolo",en:"the people (of a nation)",type:"t-structure",cat:"Nouns",note:"(m.) il popolo italiano = the Italian people",ex:""},
+  {it:"la folla",en:"the crowd",type:"t-structure",cat:"Nouns",note:"(f.) la folla / le folle",ex:""},
+  {it:"la sorpresa",en:"surprise",type:"t-structure",cat:"Nouns",note:"(f.) la sorpresa / le sorprese",ex:"Che sorpresa!"},
+  {it:"la parola",en:"word",type:"t-structure",cat:"Nouns",note:"(f.) la parola / le parole",ex:"Qual è la parola giusta?"},
+  {it:"la frase",en:"sentence / phrase",type:"t-structure",cat:"Nouns",note:"(f.) la frase / le frasi",ex:""},
+  {it:"il vocabolario",en:"vocabulary",type:"t-structure",cat:"Nouns",note:"(m.) il vocabolario / i vocabolari",ex:""},
+  {it:"il dizionario",en:"dictionary",type:"t-structure",cat:"Nouns",note:"(m.) il dizionario / i dizionari",ex:""},
+  {it:"la grammatica",en:"grammar",type:"t-structure",cat:"Nouns",note:"(f.) la grammatica",ex:""},
+  {it:"la lingua",en:"language / tongue",type:"t-structure",cat:"Nouns",note:"(f.) la lingua / le lingue",ex:"Quante lingue parli?"},
+
+  // ── RESTAURANT (7) ──
+  {it:"Avete un menù in inglese?",en:"Do you have a menu in English?",type:"t-phrase",cat:"Restaurant",note:"useful when starting out",ex:""},
+  {it:"Avete tavoli fuori?",en:"Do you have outside tables?",type:"t-phrase",cat:"Restaurant",note:"fuori = outside",ex:""},
+  {it:"Per qui",en:"For here (eating in)",type:"t-phrase",cat:"Restaurant",note:"opposite of 'da portare via'",ex:""},
+  {it:"Prendo uno di quelli.",en:"I'll take one of those (masc.).",type:"t-phrase",cat:"Restaurant",note:"point at a masculine item",ex:""},
+  {it:"Prendo una di quelle.",en:"I'll take one of those (fem.).",type:"t-phrase",cat:"Restaurant",note:"point at a feminine item",ex:""},
+  {it:"Prendo uno di questi.",en:"I'll take one of these (masc.).",type:"t-phrase",cat:"Restaurant",note:"closer/here items",ex:""},
+  {it:"Prendo una di queste.",en:"I'll take one of these (fem.).",type:"t-phrase",cat:"Restaurant",note:"closer/here items",ex:""},
+
 ];
