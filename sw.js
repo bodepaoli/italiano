@@ -1,4 +1,4 @@
-const CACHE = 'italiano-v18';
+const CACHE = 'italiano-v19';
 const ASSETS = [
   './',
   'index.html',
@@ -26,6 +26,13 @@ self.addEventListener('activate', (e) => {
 
 self.addEventListener('fetch', (e) => {
   if (e.request.method !== 'GET') return;
+  const url = new URL(e.request.url);
+  // Never cache sync Worker or translation API — always go network
+  if (url.hostname.endsWith('.workers.dev') || url.hostname === 'api.mymemory.translated.net') {
+    return; // let browser handle normally
+  }
+  // Only cache same-origin responses
+  if (url.origin !== location.origin) return;
   e.respondWith(
     caches.match(e.request).then(cached => {
       if (cached) return cached;

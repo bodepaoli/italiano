@@ -1,0 +1,8 @@
+name = "italiano-sync"
+main = "src/index.js"
+compatibility_date = "2024-09-01"
+
+# Replace id below with the ID printed by `wrangler kv namespace create KNOWN`
+[[kv_namespaces]]
+binding = "KNOWN"
+id = "REPLACE_WITH_KV_NAMESPACE_ID"
