@@ -6,3 +6,6 @@ compatibility_date = "2024-09-01"
 [[kv_namespaces]]
 binding = "KNOWN"
 id = "ebc2a1979ed04d1eb106b2fa785b1967"
+
+[ai]
+binding = "AI"

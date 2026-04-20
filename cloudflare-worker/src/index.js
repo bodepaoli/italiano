@@ -72,6 +72,65 @@ export default {
       return json({ error: 'method not allowed' }, 405, cors);
     }
 
+    // /ai — smart translation via Llama 3.1 70B. Results cached in KV 30 days.
+    if (url.pathname === '/ai') {
+      if (request.method !== 'POST') {
+        return json({ error: 'use POST' }, 405, cors);
+      }
+      let body;
+      try { body = await request.json(); }
+      catch { return json({ error: 'invalid JSON body' }, 400, cors); }
+
+      const q = (body.q || '').toString().trim().slice(0, 500);
+      if (q.length < 2) return json({ error: 'query too short' }, 400, cors);
+
+      const cacheKey = `ai:${q.toLowerCase()}`;
+      const cached = await env.KNOWN.get(cacheKey, { type: 'json' });
+      if (cached && cached.translation) {
+        return json({ translation: cached.translation, note: cached.note || '', cached: true }, 200, cors);
+      }
+
+      const sys = [
+        "You are an expert Italian language tutor helping a beginner.",
+        "Given an English or Italian phrase, produce an idiomatic translation in the OTHER language (never word-for-word).",
+        "Rules:",
+        "- English input → translate to Italian. Italian input → translate to English.",
+        "- Preserve register (formal Lei vs. informal tu; polite vs. casual).",
+        "- Use natural phrasing a native speaker would actually say.",
+        "- If the input is ambiguous between English and Italian, prefer English input.",
+        "Respond in this EXACT format, on two lines:",
+        "TRANSLATION: <the translation, no quotes, no labels>",
+        "NOTE: <one short sentence explaining a grammar/idiom/register nuance, or empty if none>"
+      ].join('\n');
+
+      try {
+        const ai = await env.AI.run('@cf/meta/llama-3.1-70b-instruct', {
+          messages: [
+            { role: 'system', content: sys },
+            { role: 'user', content: q },
+          ],
+          max_tokens: 220,
+          temperature: 0.2,
+        });
+
+        const raw = (ai.response || ai.result || '').toString().trim();
+        const tMatch = raw.match(/TRANSLATION:\s*(.+?)(?:\n|$)/i);
+        const nMatch = raw.match(/NOTE:\s*(.+?)(?:\n|$)/i);
+        let translation = (tMatch ? tMatch[1] : raw.split('\n')[0]).trim();
+        translation = translation.replace(/^["'“”]+|["'“”]+$/g, '').trim();
+        const note = nMatch ? nMatch[1].trim().replace(/^(none|n\/a|empty)\.?$/i, '') : '';
+
+        if (!translation) return json({ error: 'empty AI response' }, 502, cors);
+
+        await env.KNOWN.put(cacheKey, JSON.stringify({ translation, note, at: Date.now() }), {
+          expirationTtl: 60 * 60 * 24 * 30,
+        });
+        return json({ translation, note, cached: false }, 200, cors);
+      } catch (e) {
+        return json({ error: 'AI call failed: ' + (e.message || 'unknown') }, 500, cors);
+      }
+    }
+
     // /custom — user-added vocab entries (objects). Synced across devices.
     if (url.pathname === '/custom') {
       const key = `custom:${pass}`;
