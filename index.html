@@ -157,6 +157,10 @@
   .ai-label { color: var(--muted); font-size: 0.78rem; font-weight: 600; }
   .ai-text { color: var(--white); font-family: 'Playfair Display', serif; font-size: 1.05rem; }
   .ai-foot { margin-top: 14px; color: var(--muted); font-size: 0.7rem; font-style: italic; text-align: center; }
+  .ai-add-btn { width: 100%; margin-top: 14px; padding: 11px; background: rgba(0,146,70,0.15); color: #4ade80; border: 1px solid rgba(0,146,70,0.4); border-radius: 10px; font-family: inherit; font-size: 0.9rem; font-weight: 600; cursor: pointer; transition: all 0.15s; }
+  .ai-add-btn:hover { background: rgba(0,146,70,0.25); border-color: #4ade80; }
+  .custom-badge { display: inline-block; margin-left: 6px; color: var(--accent); font-size: 0.8rem; }
+  select.settings-input { appearance: none; background-image: linear-gradient(45deg, transparent 50%, var(--muted) 50%), linear-gradient(135deg, var(--muted) 50%, transparent 50%); background-position: calc(100% - 18px) 50%, calc(100% - 12px) 50%; background-size: 6px 6px; background-repeat: no-repeat; padding-right: 34px; cursor: pointer; }
   .ai-error { color: #f87171; font-size: 0.85rem; padding: 10px 0; }
   .ai-spinner { width: 24px; height: 24px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: ai-spin 0.8s linear infinite; margin: 8px auto 0; }
   @keyframes ai-spin { to { transform: rotate(360deg); } }
@@ -276,11 +280,17 @@
 <div id="app"></div>
 <div id="modal"></div>
 <div id="settings-modal"></div>
+<div id="add-modal"></div>
 
 <script src="vocab.js"></script>
 <script src="cheatsheets.js"></script>
 <script>
-const DATA = VOCAB;
+let DATA = VOCAB;
+function rebuildData() {
+  DATA = VOCAB.concat(customEntries.map(e => ({ ...e, custom: true })));
+  const totalEl = document.getElementById('total-count');
+  if (totalEl) totalEl.textContent = DATA.length;
+}
 
 let currentTab = 'browse';
 let currentCat = 'All';
@@ -310,6 +320,12 @@ let syncOpen = false;
 let syncStatus = { state: 'none', msg: '' };    // state: none | ok | warn | err
 let needsPush = localStorage.getItem('needsPush') === 'true';
 let pushTimer = null;
+
+// Custom user-added vocab entries (synced across devices)
+let customEntries = JSON.parse(localStorage.getItem('customEntries') || '[]');
+let needsCustomPush = localStorage.getItem('needsCustomPush') === 'true';
+let customPushTimer = null;
+let addOpen = null;                             // null or { it, en } pre-filled values
 
 const TENSE_META = {
   pres:   { label: 'Presente',    hint: 'what happens right now' },
@@ -391,22 +407,44 @@ async function syncPull() {
   if (!syncUrl || !syncPass) return;
   try {
     setSyncStatus('warn', 'Syncing…');
-    const r = await fetch(`${syncUrl.replace(/\/$/, '')}/known?pass=${encodeURIComponent(syncPass)}`);
-    if (!r.ok) { setSyncStatus('err', `Pull failed (${r.status})`); return; }
-    const data = await r.json();
-    if (!Array.isArray(data.known)) { setSyncStatus('err', 'Invalid response'); return; }
-    // If we have unpushed local changes, merge (union). Otherwise replace.
+    const base = syncUrl.replace(/\/$/, '');
+    const [rKnown, rCustom] = await Promise.all([
+      fetch(`${base}/known?pass=${encodeURIComponent(syncPass)}`),
+      fetch(`${base}/custom?pass=${encodeURIComponent(syncPass)}`),
+    ]);
+    if (!rKnown.ok || !rCustom.ok) { setSyncStatus('err', `Pull failed`); return; }
+    const dataKnown = await rKnown.json();
+    const dataCustom = await rCustom.json();
+    if (!Array.isArray(dataKnown.known)) { setSyncStatus('err', 'Invalid response'); return; }
+
+    // Known list: merge if unpushed, else replace
     if (needsPush) {
-      const merged = new Set([...knownWords, ...data.known]);
+      const merged = new Set([...knownWords, ...dataKnown.known]);
       knownWords = merged;
       localStorage.setItem('known', JSON.stringify([...knownWords]));
       await syncPush(true);
     } else {
-      knownWords = new Set(data.known);
+      knownWords = new Set(dataKnown.known);
       localStorage.setItem('known', JSON.stringify([...knownWords]));
     }
     document.getElementById('known-count').textContent = knownWords.size;
-    setSyncStatus('ok', `Synced — ${knownWords.size} words`);
+
+    // Custom entries: merge by id if unpushed, else replace
+    const remoteCustom = Array.isArray(dataCustom.custom) ? dataCustom.custom : [];
+    if (needsCustomPush) {
+      const byId = new Map();
+      for (const e of [...remoteCustom, ...customEntries]) byId.set(e.id, e);
+      customEntries = Array.from(byId.values());
+      localStorage.setItem('customEntries', JSON.stringify(customEntries));
+      await syncPushCustom(true);
+    } else {
+      customEntries = remoteCustom;
+      localStorage.setItem('customEntries', JSON.stringify(customEntries));
+    }
+    rebuildData();
+
+    setSyncStatus('ok', `Synced — ${knownWords.size} known, ${customEntries.length} custom`);
+    render();
   } catch (e) {
     setSyncStatus('err', 'Offline — will retry');
   }
@@ -429,18 +467,72 @@ async function syncPush(quiet) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ known: [...knownWords] }),
     });
-    if (!r.ok) {
-      setSyncStatus('err', `Save failed (${r.status})`);
-      return false;
-    }
+    if (!r.ok) { setSyncStatus('err', `Save failed (${r.status})`); return false; }
     needsPush = false;
     localStorage.removeItem('needsPush');
-    setSyncStatus('ok', `Synced — ${knownWords.size} words`);
+    setSyncStatus('ok', `Synced — ${knownWords.size} known, ${customEntries.length} custom`);
     return true;
   } catch (e) {
     setSyncStatus('err', 'Offline — will retry');
     return false;
   }
+}
+
+function scheduleCustomPush() {
+  if (!syncUrl || !syncPass) return;
+  needsCustomPush = true;
+  localStorage.setItem('needsCustomPush', 'true');
+  clearTimeout(customPushTimer);
+  customPushTimer = setTimeout(() => syncPushCustom(false), 600);
+}
+
+async function syncPushCustom(quiet) {
+  if (!syncUrl || !syncPass) return;
+  try {
+    if (!quiet) setSyncStatus('warn', 'Saving…');
+    // Strip the client-only `custom: true` flag before shipping
+    const payload = customEntries.map(({ custom, ...rest }) => rest);
+    const r = await fetch(`${syncUrl.replace(/\/$/, '')}/custom?pass=${encodeURIComponent(syncPass)}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ custom: payload }),
+    });
+    if (!r.ok) { setSyncStatus('err', `Save failed (${r.status})`); return false; }
+    needsCustomPush = false;
+    localStorage.removeItem('needsCustomPush');
+    setSyncStatus('ok', `Synced — ${knownWords.size} known, ${customEntries.length} custom`);
+    return true;
+  } catch (e) {
+    setSyncStatus('err', 'Offline — will retry');
+    return false;
+  }
+}
+
+function saveCustomEntry(entry) {
+  const final = {
+    id: entry.id || String(Date.now()) + '-' + Math.random().toString(36).slice(2,8),
+    it: entry.it.trim(),
+    en: entry.en.trim(),
+    type: entry.type || 't-phrase',
+    cat: entry.cat || 'Phrases',
+    note: (entry.note || '').trim(),
+    ex: (entry.ex || '').trim(),
+    createdAt: entry.createdAt || Date.now(),
+  };
+  // Upsert by id
+  const idx = customEntries.findIndex(e => e.id === final.id);
+  if (idx >= 0) customEntries[idx] = final;
+  else customEntries.push(final);
+  localStorage.setItem('customEntries', JSON.stringify(customEntries));
+  rebuildData();
+  scheduleCustomPush();
+}
+
+function deleteCustomEntry(id) {
+  customEntries = customEntries.filter(e => e.id !== id);
+  localStorage.setItem('customEntries', JSON.stringify(customEntries));
+  rebuildData();
+  scheduleCustomPush();
 }
 
 function openSettings() { syncOpen = true; renderSettings(); }
@@ -506,6 +598,94 @@ async function saveSyncSettings() {
   localStorage.setItem('syncPass', syncPass);
   await syncPull();
   renderSettings();
+}
+
+// ── Add custom entry modal ──────────────────────────────────
+const ADD_CATS = ['Phrases','Verbs','Nouns','Adjectives','Structure','Directions','Restaurant','Time','Itangliano','Colors','Prepositions'];
+const CAT_DEFAULT_TYPE = {
+  'Phrases':'t-phrase','Verbs':'t-are','Nouns':'t-structure','Adjectives':'t-adj',
+  'Structure':'t-structure','Directions':'t-structure','Restaurant':'t-phrase',
+  'Time':'t-structure','Itangliano':'t-structure','Colors':'t-adj','Prepositions':'t-prep',
+};
+
+function openAddEntry(it, en) {
+  addOpen = { it: it || '', en: en || '' };
+  renderAddEntry();
+}
+function closeAddEntry() { addOpen = null; renderAddEntry(); }
+
+function renderAddEntry() {
+  const c = document.getElementById('add-modal');
+  if (!c) return;
+  if (!addOpen) { c.innerHTML = ''; return; }
+  const editing = addOpen.id ? customEntries.find(e => e.id === addOpen.id) : null;
+  const title = editing ? 'Edit custom entry' : 'Add to vocabulary';
+  c.innerHTML = `
+    <div class="modal-overlay" onclick="if(event.target===this)closeAddEntry()">
+      <div class="modal">
+        <div class="modal-it">➕ ${title}</div>
+        <div class="modal-en">Saved to your synced vocabulary — searchable like any other entry</div>
+
+        <div class="settings-label">Italian</div>
+        <input id="add-it" class="settings-input" value="${escapeHtml(addOpen.it)}" placeholder="e.g. posso assaggiare?" />
+
+        <div class="settings-label">English</div>
+        <input id="add-en" class="settings-input" value="${escapeHtml(addOpen.en)}" placeholder="e.g. can I taste?" />
+
+        <div class="settings-label">Category</div>
+        <select id="add-cat" class="settings-input">
+          ${ADD_CATS.map(c => `<option value="${c}" ${c === (addOpen.cat || 'Phrases') ? 'selected' : ''}>${c}</option>`).join('')}
+        </select>
+
+        <div class="settings-label">Note (optional)</div>
+        <input id="add-note" class="settings-input" value="${escapeHtml(addOpen.note || '')}" placeholder="conjugation, usage tip, etc." />
+
+        <div class="settings-label">Example (optional)</div>
+        <input id="add-ex" class="settings-input" value="${escapeHtml(addOpen.ex || '')}" placeholder="example sentence" />
+
+        <div class="settings-actions">
+          <button class="settings-btn" onclick="closeAddEntry()">Cancel</button>
+          <button class="settings-btn primary" onclick="submitAddEntry()">${editing ? 'Save changes' : 'Add entry'}</button>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function editCustom(idx) {
+  const d = DATA[idx];
+  if (!d || !d.custom) return;
+  selectedModal = null;
+  renderModal();
+  addOpen = { ...d };
+  renderAddEntry();
+}
+
+function confirmDeleteCustom(idx) {
+  const d = DATA[idx];
+  if (!d || !d.custom || !d.id) return;
+  if (!confirm(`Delete "${d.it}"? This can't be undone.`)) return;
+  deleteCustomEntry(d.id);
+  selectedModal = null;
+  renderModal();
+  render();
+}
+
+function submitAddEntry() {
+  const it = document.getElementById('add-it').value.trim();
+  const en = document.getElementById('add-en').value.trim();
+  const cat = document.getElementById('add-cat').value;
+  const note = document.getElementById('add-note').value.trim();
+  const ex = document.getElementById('add-ex').value.trim();
+  if (!it || !en) { alert('Italian and English are required'); return; }
+  const type = CAT_DEFAULT_TYPE[cat] || 't-phrase';
+  saveCustomEntry({ id: addOpen.id, it, en, type, cat, note, ex });
+  addOpen = null;
+  // Clear any active search so the new entry is visible
+  searchTerm = '';
+  currentCat = cat;
+  translation = null;
+  render();
 }
 
 function clearSyncSettings() {
@@ -619,6 +799,11 @@ function renderNoResults() {
     }
     const it_to_en = translation.itToEn && translation.itToEn.toLowerCase() !== q.toLowerCase() ? translation.itToEn : '';
     const en_to_it = translation.enToIt && translation.enToIt.toLowerCase() !== q.toLowerCase() ? translation.enToIt : '';
+    // Heuristic: if we got an it→en translation that differs, the query was Italian.
+    // Otherwise assume English and use the en→it result as the Italian form.
+    const itGuess = it_to_en ? q : en_to_it;
+    const enGuess = it_to_en ? it_to_en : q;
+    const canAdd = !!(itGuess && enGuess);
     return `
       <div class="ai-fallback">
         <div class="ai-fallback-head">No vocab match — here's a quick translation:</div>
@@ -628,6 +813,7 @@ function renderNoResults() {
           ${en_to_it ? `<div class="ai-row"><div class="ai-label">🇺🇸 → 🇮🇹</div><div class="ai-text">${escapeHtml(en_to_it)}</div></div>` : ''}
           ${!it_to_en && !en_to_it ? '<div class="ai-error">No translation available</div>' : ''}
         </div>
+        ${canAdd ? `<button class="ai-add-btn" onclick="openAddEntry(${JSON.stringify(itGuess).replace(/"/g,'&quot;')}, ${JSON.stringify(enGuess).replace(/"/g,'&quot;')})">➕ Add to my vocabulary</button>` : ''}
         <div class="ai-foot">Powered by MyMemory · machine translation, may be imperfect</div>
       </div>`;
   }
@@ -654,6 +840,7 @@ function renderBrowse() {
           <div class="word-card-en">${hl(d.en)}</div>
           ${d.note ? `<div class="word-card-note">${hl(d.note.length > 60 ? d.note.substring(0,60)+'...' : d.note)}</div>` : ''}
           <span class="word-card-type ${d.type}">${d.cat}</span>
+          ${d.custom ? '<span class="custom-badge" title="Custom entry">★</span>' : ''}
           ${knownWords.has(d.it) ? '<span style="float:right;font-size:1rem">✓</span>' : ''}
         </div>
       `).join('')}
@@ -896,6 +1083,12 @@ function renderModal() {
           </button>
           <button class="modal-close" style="flex:1;margin:0" onclick="selectedModal=null;renderModal()">Close</button>
         </div>
+        ${d.custom ? `
+          <div style="display:flex;gap:8px;margin-top:8px">
+            <button class="settings-btn" style="flex:1" onclick="editCustom(${selectedModal})">✏ Edit</button>
+            <button class="settings-btn" style="flex:1;color:#f87171" onclick="confirmDeleteCustom(${selectedModal})">🗑 Delete</button>
+          </div>
+        ` : ''}
       </div>
     </div>
   `;
@@ -969,6 +1162,7 @@ function handleSearch(val) {
           <div class="word-card-en">${hl(d.en)}</div>
           ${d.note ? `<div class="word-card-note">${hl(d.note.length > 60 ? d.note.substring(0,60)+'...' : d.note)}</div>` : ''}
           <span class="word-card-type ${d.type}">${d.cat}</span>
+          ${d.custom ? '<span class="custom-badge" title="Custom entry">★</span>' : ''}
           ${knownWords.has(d.it) ? '<span style="float:right;font-size:1rem">✓</span>' : ''}
         </div>
       `).join('');
@@ -1000,6 +1194,7 @@ function render() {
   }
 }
 
+rebuildData();
 render();
 
 // Initial sync status + pull
