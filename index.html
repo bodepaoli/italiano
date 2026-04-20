@@ -147,6 +147,20 @@
   .ex-italian { color: var(--white); font-family: 'Playfair Display', serif; font-size: 0.95rem; font-style: italic; }
   .ex-english { color: var(--muted); font-size: 0.82rem; grid-column: 2; margin-top: 2px; }
   mark { background: rgba(240,192,64,0.85); color: var(--dark); border-radius: 3px; padding: 0 3px; font-weight: 600; }
+
+  .ai-fallback { margin: 0 20px 20px; padding: 22px 22px 18px; background: linear-gradient(135deg, var(--card), var(--dark2)); border: 1px solid var(--border); border-radius: 16px; }
+  .ai-fallback-head { color: var(--muted); font-size: 0.85rem; margin-bottom: 14px; }
+  .ai-fallback-head em { color: var(--accent); font-style: normal; font-weight: 500; }
+  .ai-query { font-family: 'Playfair Display', serif; font-size: 1.4rem; color: var(--white); margin-bottom: 14px; padding-bottom: 12px; border-bottom: 1px solid var(--border); }
+  .ai-results { display: flex; flex-direction: column; gap: 10px; }
+  .ai-row { display: grid; grid-template-columns: 80px 1fr; gap: 14px; align-items: baseline; padding: 10px 14px; background: var(--dark3); border: 1px solid var(--border); border-radius: 10px; }
+  .ai-label { color: var(--muted); font-size: 0.78rem; font-weight: 600; }
+  .ai-text { color: var(--white); font-family: 'Playfair Display', serif; font-size: 1.05rem; }
+  .ai-foot { margin-top: 14px; color: var(--muted); font-size: 0.7rem; font-style: italic; text-align: center; }
+  .ai-error { color: #f87171; font-size: 0.85rem; padding: 10px 0; }
+  .ai-spinner { width: 24px; height: 24px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: ai-spin 0.8s linear infinite; margin: 8px auto 0; }
+  @keyframes ai-spin { to { transform: rotate(360deg); } }
+  @media (max-width: 480px) { .ai-row { grid-template-columns: 1fr; gap: 4px; } }
   @media (max-width: 480px) {
     .ex-row { grid-template-columns: 1fr; gap: 2px; }
     .ex-english { grid-column: 1; }
@@ -260,6 +274,12 @@ let quizAnswered = false;
 let selectedModal = null;
 let activeTense = 'pres';
 let activeCheat = null;
+
+// AI translation fallback state
+let translation = null;           // { query, loading, itToEn, enToIt, error }
+let translationTimer = null;
+let translationRequestId = 0;
+const translationCache = JSON.parse(localStorage.getItem('translations') || '{}');
 
 const TENSE_META = {
   pres:   { label: 'Presente',    hint: 'what happens right now' },
@@ -406,6 +426,43 @@ function setCat(cat) {
   render();
 }
 
+function renderNoResults() {
+  const q = (searchTerm || '').trim();
+  if (q.length < 2) {
+    return '<div class="empty"><div class="empty-big">🤷</div>No results found.</div>';
+  }
+  if (translation && translation.query === q) {
+    if (translation.loading) {
+      return `
+        <div class="ai-fallback">
+          <div class="ai-fallback-head">No vocab match for "<em>${escapeHtml(q)}</em>" — translating…</div>
+          <div class="ai-spinner"></div>
+        </div>`;
+    }
+    if (translation.error) {
+      return `
+        <div class="ai-fallback">
+          <div class="ai-fallback-head">No vocab match for "<em>${escapeHtml(q)}</em>"</div>
+          <div class="ai-error">${escapeHtml(translation.error)}</div>
+        </div>`;
+    }
+    const it_to_en = translation.itToEn && translation.itToEn.toLowerCase() !== q.toLowerCase() ? translation.itToEn : '';
+    const en_to_it = translation.enToIt && translation.enToIt.toLowerCase() !== q.toLowerCase() ? translation.enToIt : '';
+    return `
+      <div class="ai-fallback">
+        <div class="ai-fallback-head">No vocab match — here's a quick translation:</div>
+        <div class="ai-query">${escapeHtml(q)}</div>
+        <div class="ai-results">
+          ${it_to_en ? `<div class="ai-row"><div class="ai-label">🇮🇹 → 🇺🇸</div><div class="ai-text">${escapeHtml(it_to_en)}</div></div>` : ''}
+          ${en_to_it ? `<div class="ai-row"><div class="ai-label">🇺🇸 → 🇮🇹</div><div class="ai-text">${escapeHtml(en_to_it)}</div></div>` : ''}
+          ${!it_to_en && !en_to_it ? '<div class="ai-error">No translation available</div>' : ''}
+        </div>
+        <div class="ai-foot">Powered by MyMemory · machine translation, may be imperfect</div>
+      </div>`;
+  }
+  return '<div class="empty"><div class="empty-big">🤷</div>No results found.</div>';
+}
+
 function renderBrowse() {
   const items = getFiltered();
   return `
@@ -418,7 +475,7 @@ function renderBrowse() {
       <div class="section-title">${currentCat === 'All' ? 'All Vocabulary' : currentCat}</div>
       <div class="section-count">${items.length} items</div>
     </div>
-    ${items.length === 0 ? '<div class="empty"><div class="empty-big">🤷</div>No results found.</div>' : ''}
+    ${items.length === 0 ? renderNoResults() : ''}
     <div class="browse-grid">
       ${items.map(d => `
         <div class="word-card${knownWords.has(d.it)?' known':''}" onclick="openModal(${DATA.indexOf(d)})">
@@ -675,19 +732,66 @@ function renderModal() {
 
 function clearSearch() {
   searchTerm = '';
+  translation = null;
+  clearTimeout(translationTimer);
   render();
   const el = document.querySelector('.search-input');
   if (el) el.focus();
 }
 
+async function fetchTranslation(text) {
+  const cached = translationCache[text.toLowerCase()];
+  if (cached) return cached;
+  async function call(pair) {
+    const r = await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=${pair}`);
+    if (!r.ok) throw new Error('fetch failed');
+    const j = await r.json();
+    return (j.responseData && j.responseData.translatedText) || '';
+  }
+  const [itToEn, enToIt] = await Promise.all([
+    call('it|en').catch(() => ''),
+    call('en|it').catch(() => ''),
+  ]);
+  const result = { itToEn, enToIt };
+  translationCache[text.toLowerCase()] = result;
+  try { localStorage.setItem('translations', JSON.stringify(translationCache)); } catch (e) {}
+  return result;
+}
+
+function scheduleTranslation(text) {
+  clearTimeout(translationTimer);
+  const q = (text || '').trim();
+  if (q.length < 2) { translation = null; return; }
+  const reqId = ++translationRequestId;
+  translation = { query: q, loading: true };
+  translationTimer = setTimeout(async () => {
+    try {
+      const result = await fetchTranslation(q);
+      if (reqId !== translationRequestId) return;
+      translation = { query: q, loading: false, ...result };
+    } catch (err) {
+      if (reqId !== translationRequestId) return;
+      translation = { query: q, loading: false, error: 'Translation failed — try again' };
+    }
+    render();
+  }, 600);
+}
+
 function handleSearch(val) {
   searchTerm = val;
   const items = getFiltered();
+  // Schedule AI translation only when no vocab matches; cancel if matches arrive
+  if (items.length === 0) {
+    scheduleTranslation(val);
+  } else {
+    clearTimeout(translationTimer);
+    translation = null;
+  }
   const grid = document.querySelector('.browse-grid');
   const count = document.querySelector('.section-count');
   if (grid) {
     grid.innerHTML = items.length === 0
-      ? '<div class="empty"><div class="empty-big">🤷</div>No results found.</div>'
+      ? renderNoResults()
       : items.map(d => `
         <div class="word-card${knownWords.has(d.it)?' known':''}" onclick="openModal(${DATA.indexOf(d)})">
           <div class="word-card-it">${hl(d.it)}</div>
