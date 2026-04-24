@@ -125,7 +125,7 @@
   .modal-en { font-size: 1rem; color: var(--accent); margin-bottom: 16px; }
   .modal-section { margin-bottom: 14px; }
   .modal-label { font-size: 0.75rem; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; }
-  .modal-text { font-size: 0.9rem; color: var(--text); line-height: 1.6; }
+  .modal-text { font-size: 0.9rem; color: var(--text); line-height: 1.6; white-space: pre-line; }
   .modal-ex { font-size: 0.85rem; color: #60a5fa; font-style: italic; padding: 8px 12px; background: rgba(59,130,246,0.08); border-radius: 8px; margin-bottom: 6px; }
   .modal-close { width: 100%; margin-top: 16px; padding: 10px; background: var(--dark3); border: 1px solid var(--border); border-radius: 10px; color: var(--muted); cursor: pointer; font-family: 'DM Sans', sans-serif; transition: all 0.2s; }
   .modal-close:hover { border-color: var(--accent); color: var(--accent); }
@@ -269,7 +269,7 @@
   <div class="nav-brand">
     <div class="flag"><div class="flag-g"></div><div class="flag-w"></div><div class="flag-r"></div></div>
     Bo's Italian
-    <span class="nav-version">v22</span>
+    <span class="nav-version">v23</span>
   </div>
   <div class="nav-stats">
     <div class="stat">Known: <span class="stat-num" id="known-count">0</span><span id="sync-dot" class="sync-dot none" title="Sync: not configured"></span></div>
@@ -731,23 +731,25 @@ function hl(text) {
   return escaped.replace(new RegExp(`(${safe})`, 'gi'), '<mark>$1</mark>');
 }
 
-function matchesEntry(d, s) {
-  if (d.it.toLowerCase().includes(s)) return true;
-  if (d.en.toLowerCase().includes(s)) return true;
-  if ((d.note || '').toLowerCase().includes(s)) return true;
-  if ((d.ex || '').toLowerCase().includes(s)) return true;
-  if ((d.aliases || '').toLowerCase().includes(s)) return true;
-  // Conjugated forms across all 5 tenses
+function matchScore(d, s) {
+  const it = (d.it || '').toLowerCase();
+  const en = (d.en || '').toLowerCase();
+  if (it === s || en === s) return 100;                          // exact full-string match
+  if (it.startsWith(s) || en.startsWith(s)) return 85;            // begins with
+  // Whole-word match on the headline fields
+  const wb = new RegExp(`\\b${s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i');
+  if (wb.test(it) || wb.test(en)) return 75;
+  if (it.includes(s)) return 65;                                  // substring on Italian
+  if (en.includes(s)) return 55;                                  // substring on English
+  if ((d.aliases || '').toLowerCase().includes(s)) return 50;     // hidden English aliases (known, eaten…)
   if (d.tenses) {
     for (const t of ['pres','past','imperf','fut','cond']) {
-      if (d.tenses[t] && d.tenses[t].some(f => f.toLowerCase().includes(s))) return true;
+      if (d.tenses[t] && d.tenses[t].some(f => f.toLowerCase().includes(s))) return 45;
     }
   }
-  // Auto-generated example sentences (Italian + English per tense)
-  if (d.examples && d.examples.some(e => e.it.toLowerCase().includes(s) || e.en.toLowerCase().includes(s))) return true;
-  // Pattern nested word lists (e.g. -tion → -zione contains "nazione")
-  if (d.words && d.words.some(w => w.it.toLowerCase().includes(s) || w.en.toLowerCase().includes(s))) return true;
-  return false;
+  if (d.words && d.words.some(w => w.it.toLowerCase().includes(s) || w.en.toLowerCase().includes(s))) return 40;
+  if ((d.note || '').toLowerCase().includes(s)) return 20;        // note text — lower priority
+  return 0;
 }
 
 function getFiltered() {
@@ -755,7 +757,12 @@ function getFiltered() {
   if (currentCat !== 'All') items = items.filter(d => d.cat === currentCat);
   if (searchTerm) {
     const s = searchTerm.toLowerCase();
-    items = items.filter(d => matchesEntry(d, s));
+    items = items.map(d => ({ d, score: matchScore(d, s) })).filter(x => x.score > 0);
+    items.sort((a, b) => {
+      if (b.score !== a.score) return b.score - a.score;
+      return sortKey(a.d.it).localeCompare(sortKey(b.d.it), 'it');
+    });
+    return items.map(x => x.d);
   }
   return items.slice().sort((a, b) => sortKey(a.it).localeCompare(sortKey(b.it), 'it'));
 }
