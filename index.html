@@ -273,7 +273,7 @@
   <div class="nav-brand">
     <div class="flag"><div class="flag-g"></div><div class="flag-w"></div><div class="flag-r"></div></div>
     Bo's Italian
-    <span class="nav-version">v25</span>
+    <span class="nav-version">v26</span>
   </div>
   <div class="nav-stats">
     <div class="stat">Known: <span class="stat-num" id="known-count">0</span><span id="sync-dot" class="sync-dot none" title="Sync: not configured"></span></div>
@@ -1278,6 +1278,8 @@ function render() {
   const searchEl = document.querySelector('.search-input');
   const hadFocus = searchEl && document.activeElement === searchEl;
   const cursorPos = searchEl ? searchEl.selectionStart : 0;
+  const catBarOld = document.querySelector('.cat-bar');
+  const catScrollLeft = catBarOld ? catBarOld.scrollLeft : 0;
 
   document.getElementById('app').innerHTML = html;
   document.getElementById('known-count').textContent = knownWords.size;
@@ -1288,6 +1290,25 @@ function render() {
     if (newSearch) {
       newSearch.focus();
       newSearch.setSelectionRange(cursorPos, cursorPos);
+    }
+  }
+
+  // Preserve cat-bar horizontal scroll across re-renders, then make sure
+  // the active pill is visible (auto-scroll it into view if it's off-screen)
+  const catBar = document.querySelector('.cat-bar');
+  if (catBar) {
+    catBar.scrollLeft = catScrollLeft;
+    const active = catBar.querySelector('.cat-pill.active');
+    if (active) {
+      const barRect = catBar.getBoundingClientRect();
+      const pillRect = active.getBoundingClientRect();
+      const offLeft = pillRect.left < barRect.left + 4;
+      const offRight = pillRect.right > barRect.right - 4;
+      if (offLeft || offRight) {
+        // Scroll only the cat-bar — center the active pill horizontally
+        const targetCenter = active.offsetLeft + active.offsetWidth / 2;
+        catBar.scrollTo({ left: targetCenter - catBar.clientWidth / 2, behavior: 'smooth' });
+      }
     }
   }
 }
