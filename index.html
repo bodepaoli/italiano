@@ -273,7 +273,7 @@
   <div class="nav-brand">
     <div class="flag"><div class="flag-g"></div><div class="flag-w"></div><div class="flag-r"></div></div>
     Bo's Italian
-    <span class="nav-version">v26</span>
+    <span class="nav-version">v27</span>
   </div>
   <div class="nav-stats">
     <div class="stat">Known: <span class="stat-num" id="known-count">0</span><span id="sync-dot" class="sync-dot none" title="Sync: not configured"></span></div>
@@ -402,7 +402,7 @@ function renderTenses(tenses, tensesEn, modalIdx) {
   `;
 }
 
-const CATS = ['All', 'Verbs', 'Phrases', 'Structure', 'Nouns', 'Adjectives', 'Colors', 'Prepositions', 'Articles', 'Numbers', 'Time', 'Directions', 'Restaurant', 'Past Tense', 'Itangliano', 'Tricky Pairs', 'Word Patterns', 'FARE Expressions'];
+const CATS = ['All', 'Verbs', 'Phrases', 'Structure', 'Nouns', 'Adjectives', 'Possessives', 'Colors', 'Prepositions', 'Articles', 'Numbers', 'Time', 'Directions', 'Restaurant', 'Food', 'Home', 'Housing', 'Travel', 'Shopping', 'Barber', 'Insurance', 'Smoking', 'Compliments', 'Past Tense', 'Itangliano', 'Tricky Pairs', 'Word Patterns', 'FARE Expressions'];
 
 function saveKnown() {
   localStorage.setItem('known', JSON.stringify([...knownWords]));
@@ -617,10 +617,14 @@ async function saveSyncSettings() {
 }
 
 // ── Add custom entry modal ──────────────────────────────────
-const ADD_CATS = ['Phrases','Verbs','Nouns','Adjectives','Structure','Directions','Restaurant','Time','Itangliano','Colors','Prepositions'];
+const ADD_CATS = ['Phrases','Verbs','Nouns','Adjectives','Possessives','Structure','Directions','Restaurant','Food','Home','Housing','Travel','Shopping','Barber','Insurance','Smoking','Compliments','Time','Itangliano','Colors','Prepositions'];
 const CAT_DEFAULT_TYPE = {
   'Phrases':'t-phrase','Verbs':'t-are','Nouns':'t-structure','Adjectives':'t-adj',
+  'Possessives':'t-structure',
   'Structure':'t-structure','Directions':'t-structure','Restaurant':'t-phrase',
+  'Food':'t-structure','Home':'t-structure','Housing':'t-structure','Travel':'t-structure',
+  'Shopping':'t-phrase','Barber':'t-phrase','Insurance':'t-structure',
+  'Smoking':'t-phrase','Compliments':'t-phrase',
   'Time':'t-structure','Itangliano':'t-structure','Colors':'t-adj','Prepositions':'t-prep',
 };
 

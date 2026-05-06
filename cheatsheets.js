@@ -326,4 +326,81 @@ const CHEATSHEETS = [
   ]
 },
 
+// ══════════════════════════════════════════════════════════════
+{
+  id: "grammar-essentials",
+  title: "Grammar Essentials",
+  subtitle: "Homonyms, possessives, polite asks — the everyday traps",
+  icon: "📐",
+  sections: [
+    { type:"heading", text:"① SE / SI / SÌ / SÉ — four words, almost the same sound" },
+    { type:"table", headers:["Word","Meaning","Example"], rows:[
+      ["**se**","if","**Se** vuoi — if you want"],
+      ["**si**","reflexive / impersonal pronoun","**Si** dice — they say / one says"],
+      ["**sì**","yes (with accent)","**Sì**, grazie — yes, thank you"],
+      ["**sé**","himself / herself (with accent)","Parla di **sé** — he talks about himself"],
+    ]},
+    { type:"rule", text:"The accent is the only thing telling **si** (pronoun) apart from **sì** (yes), and **se** (if) apart from **sé** (himself). When writing, the accent is mandatory." },
+
+    { type:"heading", text:"② SI impersonal — the universal 'one / they / people'" },
+    { type:"paragraph", text:"Italian uses 'si + 3rd-person verb' where English uses passive or generic 'they/people'. Always singular for general statements." },
+    { type:"grid", items:[
+      ["Si dice","They say / it is said"],
+      ["Si mangia bene","People eat well here"],
+      ["Si chiama","It / he / she is called"],
+      ["Si fa così","This is how it's done"],
+      ["Si parla italiano","Italian is spoken (here)"],
+    ]},
+
+    { type:"heading", text:"③ DI vs DA — static vs dynamic" },
+    { type:"rule", text:"**DI** = static origin / identity / belonging. **DA** = dynamic movement / duration / at-someone's-place / purpose. They look similar but never overlap." },
+    { type:"table", headers:["Use","Italian","English"], rows:[
+      ["Identity / origin (static)","Sono **di** Chicago","I am from Chicago"],
+      ["Movement / source (dynamic)","Vengo **da** Chicago","I'm coming from Chicago"],
+      ["At someone's place","Vado **da** Marco","I'm going to Marco's"],
+      ["Purpose / type","tazza **da** caffè","coffee cup"],
+      ["Duration","studio **da** 2 anni","I've been studying for 2 years"],
+      ["Belonging","la macchina **di** Marco","Marco's car"],
+    ]},
+
+    { type:"heading", text:"④ POSSO vs POTREI — politeness ladder" },
+    { type:"table", headers:["Form","Use","Example"], rows:[
+      ["**Posso.**","Statement: I can","Sì, posso."],
+      ["**Posso...?**","Question: Can I…?","Posso entrare?"],
+      ["**Potrei...?**","More polite: Could I…?","Potrei avere un caffè?"],
+    ]},
+    { type:"rule", text:"**Posso** and **Posso...?** are spelled identically — only intonation/punctuation distinguishes them. **Potrei** softens the ask; use it with strangers, staff, or anyone you don't know well." },
+
+    { type:"heading", text:"⑤ BENE vs BUONO — well vs good" },
+    { type:"rule", text:"**BUONO/A** describes a **NOUN/THING** (it agrees in gender). **BENE** describes a **VERB/ACTION** (invariable adverb)." },
+    { type:"table", headers:["Sentence","Why"], rows:[
+      ["Sto **bene**.","'sto' is a verb → bene"],
+      ["Va **bene**.","'va' is a verb → bene"],
+      ["Il vino è **buono**.","'vino' is a noun (m.) → buono"],
+      ["La pizza è **buona**.","'pizza' is a noun (f.) → buona"],
+      ["Parli **bene** italiano.","modifies 'parli' (verb)"],
+      ["Sei una **buona** persona.","modifies 'persona' (noun, f.)"],
+    ]},
+
+    { type:"heading", text:"⑥ Possessives — YOUR" },
+    { type:"paragraph", text:"Italian possessives agree with the THING owned, not the owner. Most take the article (il/la/i/le)." },
+    { type:"table", headers:["Form","When","Example"], rows:[
+      ["**il tuo / la tua**","informal, singular","il tuo libro / la tua casa"],
+      ["**i tuoi / le tue**","informal, plural","i tuoi occhi / le tue scarpe"],
+      ["**il Suo / la Sua**","formal (capitalized)","È il Suo passaporto?"],
+      ["**il vostro / la vostra**","plural — group","Qual è la vostra opinione?"],
+    ]},
+    { type:"rule", text:"**Family exception:** singular family members drop the article — *tuo padre*, *tua madre*, *Sua sorella*. Plural family members keep it: *i tuoi fratelli*. The phrase **i tuoi** by itself often means 'your parents'." },
+
+    { type:"heading", text:"⑦ GENTE — singular even when plural in meaning" },
+    { type:"rule", text:"**la gente** is grammatically **SINGULAR**. Always *è / era / sarà* — never *sono*. If you need a plural verb, switch to **le persone**." },
+    { type:"grid", items:[
+      ["✅ La gente è simpatica","People are nice"],
+      ["✅ C'è tanta gente","There are many people"],
+      ["✅ Le persone sono qui","People are here"],
+      ["❌ La gente sono…","wrong — never plural"],
+    ]},
+  ]
+},
+
 ];

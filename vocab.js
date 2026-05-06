@@ -1453,4 +1453,184 @@ const VOCAB = [
   {it:"Prendo uno di questi.",en:"I'll take one of these (masc.).",type:"t-phrase",cat:"Restaurant",note:"closer/here items",ex:""},
   {it:"Prendo una di queste.",en:"I'll take one of these (fem.).",type:"t-phrase",cat:"Restaurant",note:"closer/here items",ex:""},
 
+
+  // ═══════════════════════════════════════════════════════════════
+  // WAVE 7 — barber / shopping / compliments / steak / home / travel /
+  //          insurance / housing / smoking / cost of living / sit-stand /
+  //          possessives / grammar pairs (2026-05-06)
+  // ═══════════════════════════════════════════════════════════════
+
+  // ── VERBS (11) ──
+  {it:"sedersi",en:"to sit down (reflexive)",type:"t-irr",cat:"Verbs",note:"REFLEXIVE + irregular: mi siedo, ti siedi, si siede, ci sediamo, vi sedete, si siedono. Past part: seduto. Imperative: siediti! / si sieda (formal)",ex:"Mi siedo qui."},
+  {it:"alzarsi",en:"to stand up / get up (reflexive)",type:"t-are",cat:"Verbs",note:"REFLEXIVE -are: mi alzo, ti alzi, si alza, ci alziamo, vi alzate, si alzano. Imperative: alzati! / si alzi",ex:"Mi alzo presto."},
+  {it:"accomodarsi",en:"to make oneself comfortable / take a seat",type:"t-are",cat:"Verbs",note:"REFLEXIVE -are. Polite host phrase: 'Si accomodi!' = please come in / sit down",ex:"Prego, si accomodi!"},
+  {it:"delineare",en:"to line / outline",type:"t-are",cat:"Verbs",note:"-are: delineo, delinei, delinea, delineiamo, delineate, delineano. Used for barber 'lining up' a beard",ex:"Mi delinea la barba?"},
+  {it:"modellare",en:"to shape / model",type:"t-are",cat:"Verbs",note:"-are: modello, modelli, modella, modelliamo, modellate, modellano",ex:"La barba modellata."},
+  {it:"rifilare",en:"to trim",type:"t-are",cat:"Verbs",note:"-are: rifilo, rifili, rifila, rifiliamo, rifilate, rifilano. Used for hair/beard trimming",ex:"Solo rifilare, per favore."},
+  {it:"sfoltire",en:"to thin out (hair)",type:"t-ireisc",cat:"Verbs",note:"-isc -ire: sfoltisco, sfoltisci, sfoltisce, sfoltiamo, sfoltite, sfoltiscono",ex:"Mi sfoltisce i capelli?"},
+  {it:"fumare",en:"to smoke",type:"t-are",cat:"Verbs",note:"-are regular: fumo, fumi, fuma, fumiamo, fumate, fumano",ex:"Non fumo."},
+  // accorciare, spedire, ottenere — already exist with full tense matrices earlier in file
+
+  // ── ADJECTIVES (7) ──
+  {it:"seduto / seduta",en:"seated / sitting",type:"t-adj",cat:"Adjectives",note:"4 forms: seduto/a/i/e — past participle of sedersi used as adjective",ex:"Sono seduto."},
+  {it:"in piedi",en:"standing (on foot)",type:"t-adj",cat:"Adjectives",note:"INVARIABLE expression — never changes. Literally 'on feet'",ex:"Sono in piedi."},
+  {it:"fatto a mano / fatta a mano",en:"handmade",type:"t-adj",cat:"Adjectives",note:"4 forms: fatto/a/i/e a mano. Common on artisan goods",ex:"È fatto a mano."},
+  {it:"leggermente",en:"lightly / slightly (adverb)",type:"t-adj",cat:"Adjectives",note:"Technically an adverb (-mente), but tagged here for ease. Modifies verbs: 'leggermente rifilata'",ex:"Leggermente rifilata."},
+  // uguale — already exists earlier in Adjectives
+  {it:"simile",en:"similar",type:"t-adj",cat:"Adjectives",note:"-e type: simile / simili",ex:"È simile a quello."},
+  {it:"diverso / diversa",en:"different",type:"t-adj",cat:"Adjectives",note:"4 forms: diverso/a/i/e. Diverso da X = different from X",ex:"È diverso."},
+
+  // ── FOOD — STEAK NOUNS (6) ──
+  {it:"l'entrecôte",en:"ribeye steak",type:"t-structure",cat:"Food",note:"(m.) French loanword used in Italian — pronounced 'an-truh-COAT'. 'lo' would also be valid: lo entrecôte",ex:"Vorrei un entrecôte."},
+  {it:"la costata",en:"rib steak / ribeye",type:"t-structure",cat:"Food",note:"(f.) Italian word for ribeye — bone-in. la costata / le costate",ex:"Una costata, per favore."},
+  {it:"la bistecca",en:"steak",type:"t-structure",cat:"Food",note:"(f.) general word for steak. la bistecca / le bistecche",ex:"Vorrei una bistecca."},
+  {it:"la fiorentina",en:"Florentine T-bone steak",type:"t-structure",cat:"Food",note:"(f.) huge T-bone, Tuscan specialty — usually rare/al sangue",ex:"Una fiorentina al sangue."},
+  {it:"il filetto",en:"filet / tenderloin",type:"t-structure",cat:"Food",note:"(m.) il filetto / i filetti",ex:"Un filetto ben cotto."},
+  {it:"il controfiletto",en:"sirloin / striploin",type:"t-structure",cat:"Food",note:"(m.) literally 'counter-filet'. il controfiletto / i controfiletti",ex:""},
+
+  // ── FOOD — STEAK DONENESS (3) ──
+  {it:"al sangue",en:"rare (steak)",type:"t-phrase",cat:"Food",note:"literally 'at blood'. Default for fiorentina",ex:"Una bistecca al sangue."},
+  {it:"media cottura",en:"medium",type:"t-phrase",cat:"Food",note:"middle ground — also 'a media cottura'",ex:"Filetto media cottura."},
+  {it:"ben cotta",en:"well done",type:"t-phrase",cat:"Food",note:"agrees with bistecca (f.): ben cotta. With filetto (m.): ben cotto",ex:"La bistecca ben cotta."},
+
+  // ── HOME — CRAFTS / TABLEWARE (11) ──
+  {it:"il castello",en:"castle",type:"t-structure",cat:"Home",note:"(m.) il castello / i castelli",ex:"Visitiamo il castello."},
+  {it:"la ceramica",en:"ceramic",type:"t-structure",cat:"Home",note:"(f.) la ceramica / le ceramiche",ex:""},
+  {it:"la maiolica",en:"majolica / hand-painted Italian pottery",type:"t-structure",cat:"Home",note:"(f.) tin-glazed earthenware — Deruta and Vietri are famous regions",ex:""},
+  {it:"la terracotta",en:"terracotta",type:"t-structure",cat:"Home",note:"(f.) literally 'cooked earth'. la terracotta",ex:""},
+  {it:"l'artigianato",en:"craftwork / artisanal goods",type:"t-structure",cat:"Home",note:"(m.) collective noun. 'fatto a mano' = handmade",ex:"L'artigianato italiano è bellissimo."},
+  {it:"la tovaglia",en:"tablecloth",type:"t-structure",cat:"Home",note:"(f.) la tovaglia / le tovaglie",ex:""},
+  {it:"la tovaglietta",en:"placemat",type:"t-structure",cat:"Home",note:"(f.) diminutive of tovaglia. la tovaglietta / le tovagliette",ex:""},
+  // il tovagliolo — already exists earlier (in Phrases — kept as-is to avoid disturbing prior cards)
+  {it:"il sottopiatto",en:"charger plate",type:"t-structure",cat:"Home",note:"(m.) literally 'under-plate'. il sottopiatto / i sottopiatti",ex:""},
+  {it:"la sedia",en:"chair",type:"t-structure",cat:"Home",note:"(f.) la sedia / le sedie. NOT 'sedile' — that's a vehicle/stadium seat",ex:"Una sedia, per favore."},
+  {it:"il sedile",en:"seat (car / stadium)",type:"t-structure",cat:"Home",note:"(m.) il sedile / i sedili. Used for non-furniture seats",ex:"Il sedile della macchina."},
+
+  // ── TRAVEL — MARINA / WATERFRONT (4) ──
+  {it:"il molo",en:"pier / jetty",type:"t-structure",cat:"Travel",note:"(m.) il molo / i moli. Often the structure boats tie up to",ex:""},
+  {it:"il pontile",en:"pier (walkable)",type:"t-structure",cat:"Travel",note:"(m.) walkable wooden/concrete pier. il pontile / i pontili",ex:""},
+  {it:"la banchina",en:"quay / wharf",type:"t-structure",cat:"Travel",note:"(f.) la banchina / le banchine. Also = train platform",ex:""},
+  {it:"la darsena",en:"marina / boat basin",type:"t-structure",cat:"Travel",note:"(f.) protected harbor area for boats. la darsena / le darsene",ex:""},
+
+  // ── INSURANCE (7) ──
+  {it:"l'assicurazione",en:"insurance",type:"t-structure",cat:"Insurance",note:"(f.) l'assicurazione / le assicurazioni",ex:"Ho un'assicurazione."},
+  {it:"l'assicurazione auto",en:"car insurance",type:"t-structure",cat:"Insurance",note:"(f.) note: 'auto' is invariable here",ex:""},
+  {it:"la polizza",en:"policy",type:"t-structure",cat:"Insurance",note:"(f.) la polizza / le polizze. Insurance contract",ex:""},
+  {it:"il premio",en:"premium / prize",type:"t-structure",cat:"Insurance",note:"(m.) double meaning — insurance premium AND prize/award. il premio / i premi",ex:""},
+  {it:"il sinistro",en:"accident / claim",type:"t-structure",cat:"Insurance",note:"(m.) the insurance event itself. il sinistro / i sinistri",ex:""},
+  {it:"il danno",en:"damage",type:"t-structure",cat:"Insurance",note:"(m.) il danno / i danni",ex:""},
+  {it:"la copertura",en:"coverage",type:"t-structure",cat:"Insurance",note:"(f.) la copertura / le coperture",ex:""},
+
+  // ── HOUSING — NOUNS (3) ──
+  {it:"il costo della vita",en:"the cost of living",type:"t-structure",cat:"Housing",note:"(m.) fixed expression — 'della' = di+la",ex:"Qual è il costo della vita qui?"},
+  {it:"il quartiere",en:"neighborhood / district",type:"t-structure",cat:"Housing",note:"(m.) il quartiere / i quartieri",ex:"È un bel quartiere."},
+  {it:"l'affitto",en:"rent",type:"t-structure",cat:"Housing",note:"(m.) l'affitto / gli affitti. 'in affitto' = for rent",ex:"Quanto è l'affitto?"},
+
+  // ── HOUSING — PHRASES (4) ──
+  {it:"Qual è il costo della vita in questa zona?",en:"What is the cost of living in this area?",type:"t-phrase",cat:"Housing",note:"polite full-sentence question",ex:""},
+  {it:"Quanto costa vivere qui?",en:"How much does it cost to live here?",type:"t-phrase",cat:"Housing",note:"more casual",ex:""},
+  {it:"È una zona cara?",en:"Is it an expensive area?",type:"t-phrase",cat:"Housing",note:"caro/cara = expensive (also = dear)",ex:""},
+  {it:"Qual è l'affitto medio?",en:"What is the average rent?",type:"t-phrase",cat:"Housing",note:"medio = average",ex:""},
+
+  // ── BARBER — NOUNS (8) ──
+  {it:"il barbiere",en:"barber (men's)",type:"t-structure",cat:"Barber",note:"(m.) il barbiere / i barbieri — traditional men's barbershop",ex:"Vado dal barbiere."},
+  {it:"il parrucchiere",en:"hairdresser (unisex)",type:"t-structure",cat:"Barber",note:"(m.) il parrucchiere / i parrucchieri. Also la parrucchiera (f.)",ex:""},
+  {it:"il taglio",en:"cut / haircut",type:"t-structure",cat:"Barber",note:"(m.) il taglio / i tagli. 'taglio di capelli' = haircut",ex:"Ho bisogno di un taglio."},
+  {it:"la barba",en:"beard",type:"t-structure",cat:"Barber",note:"(f.) la barba / le barbe",ex:"Mi taglio la barba."},
+  {it:"la sfumatura",en:"fade / shading",type:"t-structure",cat:"Barber",note:"(f.) la sfumatura / le sfumature. Also = nuance/shade in non-barber contexts",ex:"Sfumatura a zero = bald fade."},
+  {it:"la rasatura",en:"shave",type:"t-structure",cat:"Barber",note:"(f.) la rasatura / le rasature",ex:""},
+  {it:"il rasoio",en:"razor",type:"t-structure",cat:"Barber",note:"(m.) il rasoio / i rasoi",ex:""},
+  {it:"le forbici",en:"scissors",type:"t-structure",cat:"Barber",note:"(f.pl.) ALWAYS plural — like English. Singular doesn't exist in everyday use",ex:""},
+
+  // ── BARBER — PHRASES (11) ──
+  {it:"Ho bisogno di un taglio di capelli.",en:"I need a haircut.",type:"t-phrase",cat:"Barber",note:"opening line at the barbershop",ex:""},
+  {it:"Numero 2 sopra.",en:"Number 2 on top.",type:"t-phrase",cat:"Barber",note:"clipper guard size — 'sopra' = on top",ex:""},
+  {it:"Sfumatura a zero.",en:"Bald fade.",type:"t-phrase",cat:"Barber",note:"'a zero' = down to skin",ex:""},
+  {it:"La barba delineata e modellata.",en:"Beard lined and shaped.",type:"t-phrase",cat:"Barber",note:"delineata = past part. of delineare; modellata = past part. of modellare",ex:""},
+  {it:"Leggermente rifilata.",en:"Lightly trimmed.",type:"t-phrase",cat:"Barber",note:"works for beard or hair — agree gender with what's being trimmed",ex:""},
+  {it:"Non troppo corto.",en:"Not too short.",type:"t-phrase",cat:"Barber",note:"corto = short. Critical phrase to prevent overcuts!",ex:""},
+  {it:"Lasci un po' di lunghezza.",en:"Leave some length.",type:"t-phrase",cat:"Barber",note:"formal imperative of lasciare. lunghezza = length",ex:""},
+  {it:"Solo i lati.",en:"Just the sides.",type:"t-phrase",cat:"Barber",note:"i lati = the sides",ex:""},
+  {it:"Come prima.",en:"Same as before.",type:"t-phrase",cat:"Barber",note:"if you want a repeat of last cut",ex:""},
+  {it:"Va bene così.",en:"That's fine like that.",type:"t-phrase",cat:"Barber",note:"signal you're satisfied — works anywhere, not just barber",ex:""},
+  {it:"È perfetto.",en:"It's perfect.",type:"t-phrase",cat:"Barber",note:"approval phrase",ex:""},
+
+  // ── SHOPPING — PHRASES (10) ──
+  {it:"Avete questo nello stesso colore di quello?",en:"Do you have this in the same color as that?",type:"t-phrase",cat:"Shopping",note:"nello = in+lo. lo stesso = the same",ex:""},
+  {it:"Esiste in altri colori?",en:"Does it come in other colors?",type:"t-phrase",cat:"Shopping",note:"esistere = to exist. altri colori = other colors",ex:""},
+  {it:"Potete spedirli?",en:"Can you ship them?",type:"t-phrase",cat:"Shopping",note:"spedire + li (them, m.). For fem.: spedirle",ex:""},
+  {it:"Quanto costa la spedizione?",en:"How much does shipping cost?",type:"t-phrase",cat:"Shopping",note:"la spedizione = the shipment",ex:""},
+  {it:"Spedite negli Stati Uniti?",en:"Do you ship to the United States?",type:"t-phrase",cat:"Shopping",note:"negli = in+gli. Stati Uniti is m.pl.",ex:""},
+  {it:"Pago in contanti.",en:"I'll pay cash.",type:"t-phrase",cat:"Shopping",note:"in contanti = in cash. Often gets you a discount",ex:""},
+  {it:"Facciamo un prezzo.",en:"Let's make a deal.",type:"t-phrase",cat:"Shopping",note:"opens negotiation — common in markets/artisan shops",ex:""},
+  {it:"Può fare di meglio?",en:"Can you do better?",type:"t-phrase",cat:"Shopping",note:"polite haggling — formal 'può'. di meglio = better (price)",ex:""},
+  {it:"Ultimo prezzo?",en:"Final price?",type:"t-phrase",cat:"Shopping",note:"closing-the-deal phrase",ex:""},
+  {it:"Ho bisogno di un preventivo.",en:"I need a quote.",type:"t-phrase",cat:"Shopping",note:"un preventivo = quote/estimate. Useful for services/repairs",ex:""},
+
+  // ── COMPLIMENTS (10) ──
+  {it:"Sei così bella.",en:"You are so beautiful.",type:"t-phrase",cat:"Compliments",note:"informal (tu). 'bello/a' agrees with subject. To a man: sei così bello",ex:""},
+  {it:"Sei bellissima.",en:"You are absolutely beautiful.",type:"t-phrase",cat:"Compliments",note:"-issima superlative — stronger than bella",ex:""},
+  {it:"Sei stupenda.",en:"You are stunning.",type:"t-phrase",cat:"Compliments",note:"to a man: stupendo",ex:""},
+  {it:"Sei meravigliosa.",en:"You are wonderful.",type:"t-phrase",cat:"Compliments",note:"to a man: meraviglioso",ex:""},
+  {it:"Sei incantevole.",en:"You are enchanting.",type:"t-phrase",cat:"Compliments",note:"-e type adjective — same form for m/f singular",ex:""},
+  {it:"Hai gli occhi bellissimi.",en:"You have beautiful eyes.",type:"t-phrase",cat:"Compliments",note:"gli occhi (m.pl.) → bellissimi (m.pl.)",ex:""},
+  {it:"I tuoi occhi sono così belli.",en:"Your eyes are so beautiful.",type:"t-phrase",cat:"Compliments",note:"i tuoi (m.pl. possessive) — agrees with occhi",ex:""},
+  {it:"Sei così bella quando sorridi.",en:"You are so beautiful when you smile.",type:"t-phrase",cat:"Compliments",note:"sorridi = you smile (sorridere)",ex:""},
+  {it:"Sei una favola.",en:"You are gorgeous (lit. 'a fairy tale').",type:"t-phrase",cat:"Compliments",note:"idiom — works for any gender",ex:""},
+  {it:"Mi hai rubato il cuore.",en:"You have stolen my heart.",type:"t-phrase",cat:"Compliments",note:"rubato = past part. of rubare (to steal). il cuore = the heart",ex:""},
+
+  // ── POSSESSIVES — YOUR (4) ──
+  {it:"il tuo / la tua",en:"your (informal, sing.)",type:"t-structure",cat:"Possessives",note:"agree with the THING owned, not the owner. il tuo libro (m.s.) / la tua casa (f.s.). With family: usually drop article (tuo padre, tua madre)",ex:"il tuo nome / la tua casa"},
+  {it:"i tuoi / le tue",en:"your (informal, plural)",type:"t-structure",cat:"Possessives",note:"i tuoi libri (m.pl.) / le tue case (f.pl.). 'i tuoi' alone = your parents",ex:"i tuoi occhi / le tue scarpe"},
+  {it:"il Suo / la Sua",en:"your (formal)",type:"t-structure",cat:"Possessives",note:"capitalized to distinguish from 'his/her' (same words, lowercase). Used with formal Lei. Plural: i Suoi / le Sue",ex:"È il Suo passaporto?"},
+  {it:"il vostro / la vostra",en:"your (plural — group)",type:"t-structure",cat:"Possessives",note:"talking to a group. Plural forms: i vostri / le vostre",ex:"Qual è la vostra opinione?"},
+
+  // ── STRUCTURE — SI IMPERSONAL (5) ──
+  {it:"Si dice...",en:"They say... / It is said...",type:"t-structure",cat:"Structure",note:"SI IMPERSONAL — used like English passive 'one says'. Always 3rd-person sing. verb",ex:"Si dice che è vero."},
+  {it:"Si mangia bene.",en:"The food is good. / People eat well here.",type:"t-structure",cat:"Structure",note:"impersonal SI — common compliment about a restaurant/region",ex:""},
+  {it:"Si chiama...",en:"It is called... / His/her name is...",type:"t-structure",cat:"Structure",note:"reflexive chiamarsi — also used for things: 'come si chiama questo?' = what's this called?",ex:"Si chiama Marco."},
+  {it:"Si fa così.",en:"This is how it's done.",type:"t-structure",cat:"Structure",note:"impersonal — when teaching/explaining a method",ex:""},
+  {it:"Si parla italiano.",en:"Italian is spoken (here).",type:"t-structure",cat:"Structure",note:"often on shop signs",ex:""},
+
+  // ── STRUCTURE — POSSO / POTREI (3) ──
+  {it:"Posso.",en:"I can. (statement)",type:"t-structure",cat:"Structure",note:"potere — io form. Indicative, neutral",ex:"Sì, posso."},
+  {it:"Posso...?",en:"Can I...? (question)",type:"t-structure",cat:"Structure",note:"SAME word as 'I can' — only intonation/punctuation changes the meaning",ex:"Posso entrare?"},
+  {it:"Potrei...?",en:"Could I...? (more polite)",type:"t-structure",cat:"Structure",note:"conditional of potere — softer/more polite than Posso",ex:"Potrei avere un caffè?"},
+
+  // ── TRICKY PAIRS — GRAMMAR HOMONYMS (4) ──
+  {it:"se / si / sì / sé",en:"if / reflexive-impersonal / yes / himself-herself",type:"t-structure",cat:"Tricky Pairs",note:"FOUR HOMOPHONES: ① se = if (se vuoi). ② si = reflexive/impersonal pronoun (si dice). ③ sì = yes (with accent). ④ sé = himself/herself (with accent — reflexive object: parla di sé)",ex:"Se vuoi, sì, si fa così."},
+  {it:"di vs da",en:"of/from (static) vs from/since/at (dynamic)",type:"t-structure",cat:"Tricky Pairs",note:"DI = static origin/identity/belonging: 'Sono DI Chicago' (I'm FROM Chicago — identity). DA = dynamic movement/duration/at-someone's-place/purpose: 'Vengo DA Chicago' (coming from), 'Vado DA Marco' (to Marco's), 'tazza DA caffè' (coffee cup), 'studio DA 2 anni' (for 2 years)",ex:"Sono di Chicago. / Vengo da Chicago."},
+  {it:"bene vs buono",en:"well (adverb) vs good (adjective)",type:"t-structure",cat:"Tricky Pairs",note:"BUONO/A = good — describes a NOUN/THING (È buono = it's good food). BENE = well — describes a VERB/ACTION (Sto bene = I'm well). 'Va bene' = that's fine. 'È buono' = it's tasty/good",ex:"Sto bene. / Il vino è buono."},
+  {it:"posso vs potrei",en:"I can vs I could (politeness)",type:"t-structure",cat:"Tricky Pairs",note:"POSSO = I can (indicative). POSSO...? = Can I...? (same word, question intonation). POTREI...? = Could I...? — conditional, more polite. Use POTREI when asking strangers/staff",ex:"Posso? / Potrei?"},
+
+  // ── TIME — BEFORE / AFTER (5) ──
+  {it:"prima",en:"before / first",type:"t-structure",cat:"Time",note:"adverb. 'prima' alone = beforehand / first. Pair: prima / dopo",ex:"Prima andiamo a casa."},
+  // dopo — already exists in Structure
+  {it:"prima di",en:"before (something specific)",type:"t-structure",cat:"Time",note:"PREP: 'prima di' + noun/infinitive. Prima di cena = before dinner. Prima di partire = before leaving",ex:"Prima di cena."},
+  {it:"dopo di",en:"after (something specific)",type:"t-structure",cat:"Time",note:"PREP: 'dopo di' + pronoun/clause. 'Dopo di te' = after you. With nouns, often just 'dopo' alone",ex:"Dopo di te."},
+  {it:"prima o poi",en:"sooner or later",type:"t-phrase",cat:"Time",note:"fixed expression — useful for talking about future plans/inevitabilities",ex:"Prima o poi imparo l'italiano!"},
+
+  // ── PHRASES — SIT / STAND (6) ──
+  {it:"Siediti!",en:"Sit down! (informal)",type:"t-phrase",cat:"Phrases",note:"imperative tu of sedersi — reflexive pronoun attaches",ex:""},
+  {it:"Si sieda.",en:"Please sit down. (formal)",type:"t-phrase",cat:"Phrases",note:"formal imperative Lei — note SEPARATE pronoun, not attached",ex:""},
+  {it:"Alzati!",en:"Stand up! (informal)",type:"t-phrase",cat:"Phrases",note:"imperative tu of alzarsi",ex:""},
+  {it:"Sono seduto.",en:"I am sitting. (m.) / Sono seduta. (f.)",type:"t-phrase",cat:"Phrases",note:"essere + past participle of sedersi as adjective. Agree with speaker's gender",ex:""},
+  {it:"Sono in piedi.",en:"I am standing.",type:"t-phrase",cat:"Phrases",note:"'in piedi' = standing — invariable. Same for any gender/number",ex:""},
+  {it:"Prego, si accomodi!",en:"Please have a seat! (formal)",type:"t-phrase",cat:"Phrases",note:"'prego' softens it — common host welcome",ex:""},
+
+  // ── PHRASES — PEOPLE (gente vs persone) (4) ──
+  {it:"La gente è...",en:"People are... (singular verb!)",type:"t-phrase",cat:"Phrases",note:"GENTE RULE: 'la gente' is grammatically SINGULAR — always È, era, sarà. Wrong: ❌ la gente sono",ex:"La gente è simpatica."},
+  {it:"Le persone sono...",en:"People are... (plural)",type:"t-phrase",cat:"Phrases",note:"if you need a plural verb, use 'le persone' instead of 'la gente'",ex:"Le persone sono qui."},
+  {it:"C'è tanta gente in piazza.",en:"There are so many people in the square.",type:"t-phrase",cat:"Phrases",note:"singular construction — c'è (NOT ci sono). 'tanta' agrees fem.",ex:""},
+  {it:"Ci sono tante persone.",en:"There are many people.",type:"t-phrase",cat:"Phrases",note:"plural construction — ci sono. 'tante' agrees fem.pl.",ex:""},
+
+  // ── SMOKING (4) ──
+  {it:"Posso fumare qui?",en:"Can I smoke here?",type:"t-phrase",cat:"Smoking",note:"posso = I can / may I. Useful in restaurants, hotels, taxis",ex:""},
+  {it:"Vietato fumare",en:"No smoking",type:"t-phrase",cat:"Smoking",note:"common sign. vietato = forbidden",ex:""},
+  {it:"Zona fumatori",en:"Smoking area",type:"t-phrase",cat:"Smoking",note:"zona = zone/area. fumatori = smokers (m.pl.)",ex:""},
+  {it:"C'è tanta gente che fuma.",en:"There are so many people who smoke.",type:"t-phrase",cat:"Smoking",note:"'che fuma' = who smokes — singular because gente is singular",ex:""},
+
+  // ── NOUNS — BODY (1) ──
+  {it:"l'occhio / gli occhi",en:"eye / eyes",type:"t-structure",cat:"Nouns",note:"(m.) IRREGULAR PLURAL: l'occhio (sing.) → gli occhi (pl.). Pronounced 'OK-kyo' / 'OK-kee'",ex:"Hai gli occhi bellissimi."},
+
 ];
