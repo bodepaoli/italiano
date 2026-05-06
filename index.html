@@ -117,6 +117,12 @@
   .quiz-opt.correct { background: rgba(0,146,70,0.15); border-color: #4ade80; color: #4ade80; }
   .quiz-opt.wrong { background: rgba(206,43,55,0.15); border-color: #f87171; color: #f87171; }
   .quiz-opt.disabled { cursor: default; }
+  .quiz-opt.disabled:hover { border-color: var(--border); color: var(--text); }
+  .quiz-opt.disabled.correct:hover { border-color: #4ade80; color: #4ade80; }
+  .quiz-opt.disabled.wrong:hover { border-color: #f87171; color: #f87171; }
+  .quiz-feedback { width: 100%; max-width: 560px; padding: 12px 16px; border-radius: 12px; text-align: center; font-size: 0.95rem; font-weight: 500; }
+  .quiz-feedback.correct { background: rgba(0,146,70,0.15); border: 1px solid #4ade80; color: #4ade80; }
+  .quiz-feedback.wrong { background: rgba(206,43,55,0.15); border: 1px solid #f87171; color: #f87171; }
   .quiz-score { font-size: 0.85rem; color: var(--muted); }
   .quiz-result { text-align: center; padding: 24px; }
   .quiz-result-big { font-family: 'Playfair Display', serif; font-size: 3rem; color: var(--accent); }
@@ -273,7 +279,7 @@
   <div class="nav-brand">
     <div class="flag"><div class="flag-g"></div><div class="flag-w"></div><div class="flag-r"></div></div>
     Bo's Italian
-    <span class="nav-version">v27</span>
+    <span class="nav-version">v28</span>
   </div>
   <div class="nav-stats">
     <div class="stat">Known: <span class="stat-num" id="known-count">0</span><span id="sync-dot" class="sync-dot none" title="Sync: not configured"></span></div>
@@ -315,6 +321,7 @@ let quizItems = [];
 let quizIndex = 0;
 let quizScore = 0;
 let quizAnswered = false;
+let quizCurrent = null; // { item, options, chosen } — memoized per question so re-renders don't reshuffle
 let selectedModal = null;
 let activeTense = 'pres';
 let activeCheat = null;
@@ -956,6 +963,15 @@ function startQuiz() {
   quizIndex = 0;
   quizScore = 0;
   quizAnswered = false;
+  quizCurrent = null;
+}
+
+function buildQuizQuestion() {
+  const item = quizItems[quizIndex];
+  const pool = DATA.filter(d => d.en !== item.en);
+  const wrongs = pool.sort(() => Math.random() - 0.5).slice(0, 3).map(d => d.en);
+  const options = [...wrongs, item.en].sort(() => Math.random() - 0.5);
+  quizCurrent = { item, options, chosen: null };
 }
 
 function renderQuiz() {
@@ -975,14 +991,17 @@ function renderQuiz() {
       </div>
     `;
   }
-  const item = quizItems[quizIndex];
-  const pool = DATA.filter(d => d.en !== item.en);
-  const wrongs = pool.sort(() => Math.random() - 0.5).slice(0, 3).map(d => d.en);
-  const options = [...wrongs, item.en].sort(() => Math.random() - 0.5);
+  // Build the question once per quizIndex; reuse on subsequent renders so options + ordering don't reshuffle.
+  if (!quizCurrent || quizCurrent.item !== quizItems[quizIndex]) {
+    buildQuizQuestion();
+  }
+  const { item, options, chosen } = quizCurrent;
+  const correct = item.en;
   const pct = (quizIndex / quizItems.length * 100).toFixed(0);
-  // Stash options for click handler (avoid string-escaping answers in HTML)
-  window._quizOpts = options;
-  window._quizAnswer = item.en;
+  const feedback = chosen === null ? '' :
+    chosen === correct
+      ? `<div class="quiz-feedback correct">✓ Correct!</div>`
+      : `<div class="quiz-feedback wrong">✗ Wrong — correct answer: <strong>${correct}</strong></div>`;
   return `
     <div class="cat-bar">${CATS.map(c=>`<div class="cat-pill${currentCat===c?' active':''}" onclick="setCat('${c}');startQuiz();render()">${c}</div>`).join('')}</div>
     <div class="quiz-wrap">
@@ -994,30 +1013,34 @@ function renderQuiz() {
         ${item.cat ? `<div class="quiz-context">${item.cat}</div>` : ''}
       </div>
       <div class="quiz-options">
-        ${options.map((opt, i) => `
-          <button class="quiz-opt" onclick="answerQuiz(${i}, this)">${opt}</button>
-        `).join('')}
+        ${options.map((opt, i) => {
+          let cls = 'quiz-opt';
+          if (chosen !== null) {
+            cls += ' disabled';
+            if (opt === correct) cls += ' correct';
+            else if (opt === chosen) cls += ' wrong';
+          }
+          return `<button class="${cls}" onclick="answerQuiz(${i})">${opt}</button>`;
+        }).join('')}
       </div>
-      ${quizAnswered ? `<button class="fc-btn primary" onclick="quizIndex++;quizAnswered=false;render()">Next →</button>` : ''}
+      ${feedback}
+      ${quizAnswered ? `<button class="fc-btn primary" onclick="nextQuiz()">Next →</button>` : ''}
     </div>
   `;
 }
 
-function answerQuiz(i, btn) {
-  if (quizAnswered) return;
+function answerQuiz(i) {
+  if (quizAnswered || !quizCurrent) return;
   quizAnswered = true;
-  const chosen = window._quizOpts[i];
-  const correct = window._quizAnswer;
-  document.querySelectorAll('.quiz-opt').forEach(b => {
-    b.classList.add('disabled');
-    if (b.textContent.trim() === correct) b.classList.add('correct');
-  });
-  if (chosen === correct) {
-    btn.classList.add('correct');
-    quizScore++;
-  } else {
-    btn.classList.add('wrong');
-  }
+  quizCurrent.chosen = quizCurrent.options[i];
+  if (quizCurrent.chosen === quizCurrent.item.en) quizScore++;
+  render();
+}
+
+function nextQuiz() {
+  quizIndex++;
+  quizAnswered = false;
+  quizCurrent = null;
   render();
 }
 
