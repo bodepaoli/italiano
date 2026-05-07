@@ -123,6 +123,18 @@
   .quiz-feedback { width: 100%; max-width: 560px; padding: 12px 16px; border-radius: 12px; text-align: center; font-size: 0.95rem; font-weight: 500; }
   .quiz-feedback.correct { background: rgba(0,146,70,0.15); border: 1px solid #4ade80; color: #4ade80; }
   .quiz-feedback.wrong { background: rgba(206,43,55,0.15); border: 1px solid #f87171; color: #f87171; }
+  .quiz-controls { display: flex; flex-wrap: wrap; gap: 8px; padding: 12px 20px 0; align-items: center; justify-content: center; }
+  .quiz-toggle { display: inline-flex; gap: 0; background: var(--dark2); border: 1px solid var(--border); border-radius: 999px; padding: 3px; }
+  .qt-btn { padding: 6px 14px; border: none; background: transparent; color: var(--muted); font-family: 'DM Sans', sans-serif; font-size: 0.8rem; font-weight: 500; cursor: pointer; border-radius: 999px; transition: all 0.2s; white-space: nowrap; }
+  .qt-btn:hover { color: var(--text); }
+  .qt-btn.active { background: var(--accent); color: var(--dark); }
+  .qt-btn.srs-btn { border: 1px solid var(--border); background: var(--dark2); }
+  .qt-btn.srs-btn.active { background: rgba(0,146,70,0.15); border-color: #4ade80; color: #4ade80; }
+  .quiz-conj-spec { margin-top: 12px; font-size: 1rem; color: var(--text); padding: 8px 12px; background: var(--dark2); border-radius: 8px; display: inline-block; }
+  .quiz-conj-spec strong { color: var(--accent); }
+  .quiz-conj-spec em { color: var(--blue); font-style: normal; }
+  .srs-badge { display: inline-block; margin-left: 8px; padding: 2px 8px; border-radius: 999px; font-size: 0.7rem; font-weight: 500; background: var(--dark3); color: var(--muted); border: 1px solid var(--border); vertical-align: middle; }
+  .srs-badge.new { background: rgba(74,158,255,0.12); border-color: #4a9eff; color: #4a9eff; }
   .quiz-score { font-size: 0.85rem; color: var(--muted); }
   .quiz-result { text-align: center; padding: 24px; }
   .quiz-result-big { font-family: 'Playfair Display', serif; font-size: 3rem; color: var(--accent); }
@@ -279,7 +291,7 @@
   <div class="nav-brand">
     <div class="flag"><div class="flag-g"></div><div class="flag-w"></div><div class="flag-r"></div></div>
     Bo's Italian
-    <span class="nav-version">v28</span>
+    <span class="nav-version">v29</span>
   </div>
   <div class="nav-stats">
     <div class="stat">Known: <span class="stat-num" id="known-count">0</span><span id="sync-dot" class="sync-dot none" title="Sync: not configured"></span></div>
@@ -321,7 +333,12 @@ let quizItems = [];
 let quizIndex = 0;
 let quizScore = 0;
 let quizAnswered = false;
-let quizCurrent = null; // { item, options, chosen } — memoized per question so re-renders don't reshuffle
+let quizCurrent = null; // { kind, ... } — memoized per question so re-renders don't reshuffle
+let quizMode = localStorage.getItem('quizMode') || 'vocab';      // 'vocab' | 'conjugate'
+let quizDir  = localStorage.getItem('quizDir')  || 'it-en';      // 'it-en' | 'en-it'
+let quizSrs  = localStorage.getItem('quizSrs') !== '0';          // default ON
+// SRS state — per-item: { c: correct count, w: wrong count, level: 0..6, last: ms, due: ms }
+let srs = JSON.parse(localStorage.getItem('srs') || '{}');
 let selectedModal = null;
 let activeTense = 'pres';
 let activeCheat = null;
@@ -958,28 +975,224 @@ function toggleKnown(idx) {
   render();
 }
 
+// ════════════════════════════════════════════════════════════════
+// SRS — spaced repetition. Levels 0..6 with intervals (in days):
+// 0: 0.5 (next session), 1: 1, 2: 2, 3: 5, 4: 14, 5: 30, 6: 90
+// Wrong answer drops to 0. Right answer moves up one level.
+// ════════════════════════════════════════════════════════════════
+const SRS_INTERVALS_DAYS = [0.5, 1, 2, 5, 14, 30, 90];
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+function srsKey(it) { return it; }
+
+function srsRecord(it) {
+  return srs[srsKey(it)] || null;
+}
+
+function srsRecordAnswer(it, isCorrect) {
+  const k = srsKey(it);
+  const prev = srs[k] || { c: 0, w: 0, level: 0, last: 0, due: 0 };
+  const newLevel = isCorrect ? Math.min(prev.level + 1, SRS_INTERVALS_DAYS.length - 1) : 0;
+  const now = Date.now();
+  srs[k] = {
+    c: prev.c + (isCorrect ? 1 : 0),
+    w: prev.w + (isCorrect ? 0 : 1),
+    level: newLevel,
+    last: now,
+    due: now + SRS_INTERVALS_DAYS[newLevel] * DAY_MS,
+  };
+  localStorage.setItem('srs', JSON.stringify(srs));
+}
+
+// Score an item for selection. Higher = more urgent to study.
+function srsPriority(it) {
+  const r = srs[srsKey(it)];
+  const now = Date.now();
+  if (!r) return 1.5;                                                     // never seen — always in pool
+  if (r.due <= now) return 2 + Math.min((now - r.due) / DAY_MS, 30) * 0.05; // overdue — top priority, scaled by how overdue
+  // Not yet due — low priority, decays toward 1 as it approaches due
+  const interval = Math.max(SRS_INTERVALS_DAYS[r.level] * DAY_MS, DAY_MS);
+  return Math.max(0, 1 - (r.due - now) / interval);
+}
+
+function pickSrsItems(pool, n) {
+  if (!quizSrs) return pool.slice().sort(() => Math.random() - 0.5).slice(0, n);
+  // Score each item, add jitter so sessions feel different
+  const scored = pool.map(it => ({ it, p: srsPriority(it) + Math.random() * 0.4 }));
+  scored.sort((a, b) => b.p - a.p);
+  return scored.slice(0, n).map(x => x.it);
+}
+
+// ════════════════════════════════════════════════════════════════
+// Quiz orchestration
+// ════════════════════════════════════════════════════════════════
+
+function quizPool() {
+  // Pool = current category filter (no search)
+  const items = currentCat === 'All' ? DATA : DATA.filter(d => d.cat === currentCat);
+  if (quizMode === 'conjugate') {
+    // Only verbs with full tense data (need at least pres + one other tense)
+    return items.filter(d =>
+      d.tenses && d.tenses.pres && d.tenses.pres.length === 6
+    );
+  }
+  return items;
+}
+
 function startQuiz() {
-  quizItems = getFiltered().sort(() => Math.random() - 0.5).slice(0, 20);
+  const pool = quizPool();
+  quizItems = pickSrsItems(pool, 20);
   quizIndex = 0;
   quizScore = 0;
   quizAnswered = false;
   quizCurrent = null;
 }
 
-function buildQuizQuestion() {
+const PERSON_LABELS = ['io', 'tu', 'lui/lei', 'noi', 'voi', 'loro'];
+const TENSE_LABELS = {
+  pres: 'present',
+  past: 'passato prossimo',
+  imperf: 'imperfect',
+  fut: 'future',
+  cond: 'conditional',
+};
+
+function buildVocabQuestion() {
   const item = quizItems[quizIndex];
-  const pool = DATA.filter(d => d.en !== item.en);
-  const wrongs = pool.sort(() => Math.random() - 0.5).slice(0, 3).map(d => d.en);
-  const options = [...wrongs, item.en].sort(() => Math.random() - 0.5);
-  quizCurrent = { item, options, chosen: null };
+  const isItToEn = quizDir === 'it-en';
+  // Field shown to user as prompt vs the field they pick from
+  const promptField = isItToEn ? 'it' : 'en';
+  const answerField = isItToEn ? 'en' : 'it';
+  const correct = item[answerField];
+  // Build 3 wrong distractors: prefer same category, fall back to any
+  const sameCat = DATA.filter(d => d !== item && d[answerField] !== correct && d.cat === item.cat);
+  const others  = DATA.filter(d => d !== item && d[answerField] !== correct);
+  const pool = (sameCat.length >= 6 ? sameCat : others);
+  const wrongs = pool.sort(() => Math.random() - 0.5).slice(0, 3).map(d => d[answerField]);
+  const options = [...wrongs, correct].sort(() => Math.random() - 0.5);
+  quizCurrent = {
+    kind: 'vocab',
+    item,
+    prompt: item[promptField],
+    correct,
+    options,
+    chosen: null,
+    promptLabel: isItToEn ? 'What does this mean in English?' : 'What is this in Italian?',
+    contextLine: item.cat || '',
+  };
+}
+
+function buildConjugateQuestion() {
+  const item = quizItems[quizIndex];
+  const tenseKeys = ['pres','past','imperf','fut','cond'].filter(t => item.tenses && item.tenses[t] && item.tenses[t].length === 6);
+  const tense = tenseKeys[Math.floor(Math.random() * tenseKeys.length)];
+  const person = Math.floor(Math.random() * 6);
+  const correct = item.tenses[tense][person];
+  // Wrong distractors: pull from this verb's other persons (same tense) and other tenses (same person)
+  const distractors = new Set();
+  // Same tense, other persons
+  for (let i = 0; i < 6; i++) {
+    if (i !== person && item.tenses[tense][i] && item.tenses[tense][i] !== correct) {
+      distractors.add(item.tenses[tense][i]);
+    }
+  }
+  // Same person, other tenses
+  for (const t of tenseKeys) {
+    if (t !== tense && item.tenses[t][person] && item.tenses[t][person] !== correct) {
+      distractors.add(item.tenses[t][person]);
+    }
+  }
+  const wrongPool = Array.from(distractors).sort(() => Math.random() - 0.5);
+  const wrongs = wrongPool.slice(0, 3);
+  // Backfill from other verbs if we somehow didn't get 3 (e.g. tiny tense table)
+  while (wrongs.length < 3) {
+    const v = DATA[Math.floor(Math.random() * DATA.length)];
+    if (v.tenses && v.tenses.pres && v.tenses.pres[person] && v.tenses.pres[person] !== correct) {
+      wrongs.push(v.tenses.pres[person]);
+    }
+  }
+  const options = [...wrongs, correct].sort(() => Math.random() - 0.5);
+  const enHint = (item.tensesEn && item.tensesEn[tense] && item.tensesEn[tense][person]) || '';
+  quizCurrent = {
+    kind: 'conjugate',
+    item,
+    prompt: item.it,
+    correct,
+    options,
+    chosen: null,
+    tense,
+    person,
+    enHint,
+  };
+}
+
+function buildQuestion() {
+  if (quizMode === 'conjugate') buildConjugateQuestion();
+  else buildVocabQuestion();
+}
+
+function renderQuizControls() {
+  const dirRow = quizMode === 'vocab' ? `
+    <div class="quiz-toggle">
+      <button class="qt-btn ${quizDir==='it-en'?'active':''}" onclick="setQuizDir('it-en')">🇮🇹 → 🇬🇧</button>
+      <button class="qt-btn ${quizDir==='en-it'?'active':''}" onclick="setQuizDir('en-it')">🇬🇧 → 🇮🇹</button>
+    </div>` : '';
+  return `
+    <div class="quiz-controls">
+      <div class="quiz-toggle">
+        <button class="qt-btn ${quizMode==='vocab'?'active':''}" onclick="setQuizMode('vocab')">📖 Vocab</button>
+        <button class="qt-btn ${quizMode==='conjugate'?'active':''}" onclick="setQuizMode('conjugate')">🔁 Conjugate</button>
+      </div>
+      ${dirRow}
+      <button class="qt-btn srs-btn ${quizSrs?'active':''}" onclick="toggleSrs()" title="${quizSrs?'Smart mode: prioritizes overdue + missed words':'Random mode: any items in pool'}">${quizSrs?'🎯 Smart':'🎲 Random'}</button>
+    </div>`;
+}
+
+function setQuizMode(m) {
+  if (quizMode === m) return;
+  quizMode = m;
+  localStorage.setItem('quizMode', m);
+  startQuiz();
+  render();
+}
+function setQuizDir(d) {
+  if (quizDir === d) return;
+  quizDir = d;
+  localStorage.setItem('quizDir', d);
+  // direction change just rebuilds current question
+  quizCurrent = null;
+  quizAnswered = false;
+  render();
+}
+function toggleSrs() {
+  quizSrs = !quizSrs;
+  localStorage.setItem('quizSrs', quizSrs ? '1' : '0');
+  startQuiz();
+  render();
 }
 
 function renderQuiz() {
   if (quizItems.length === 0) { startQuiz(); }
+
+  // Empty pool guard (e.g. Conjugate mode with a non-verb category)
+  if (quizItems.length === 0) {
+    return `
+      <div class="cat-bar">${CATS.map(c=>`<div class="cat-pill${currentCat===c?' active':''}" onclick="setCat('${c}');startQuiz();render()">${c}</div>`).join('')}</div>
+      ${renderQuizControls()}
+      <div class="quiz-wrap">
+        <div class="quiz-result">
+          <div style="font-size:1.5rem;margin:8px">📚 No items in this pool</div>
+          <div class="quiz-result-sub">${quizMode==='conjugate'?'Conjugate mode needs verbs with full tense data. Try the All category or a verb-heavy one.':'Try a different category.'}</div>
+        </div>
+      </div>
+    `;
+  }
+
   if (quizIndex >= quizItems.length) {
     const pct = Math.round(quizScore / quizItems.length * 100);
     return `
       <div class="cat-bar">${CATS.map(c=>`<div class="cat-pill${currentCat===c?' active':''}" onclick="setCat('${c}');startQuiz();render()">${c}</div>`).join('')}</div>
+      ${renderQuizControls()}
       <div class="quiz-wrap">
         <div class="quiz-result">
           <div class="quiz-result-big">${pct}%</div>
@@ -991,27 +1204,54 @@ function renderQuiz() {
       </div>
     `;
   }
+
   // Build the question once per quizIndex; reuse on subsequent renders so options + ordering don't reshuffle.
   if (!quizCurrent || quizCurrent.item !== quizItems[quizIndex]) {
-    buildQuizQuestion();
+    buildQuestion();
   }
-  const { item, options, chosen } = quizCurrent;
-  const correct = item.en;
+  const { kind, item, prompt, options, correct, chosen } = quizCurrent;
   const pct = (quizIndex / quizItems.length * 100).toFixed(0);
+
+  // Question header — varies by mode
+  let questionBlock;
+  if (kind === 'conjugate') {
+    const personLabel = PERSON_LABELS[quizCurrent.person];
+    const tenseLabel = TENSE_LABELS[quizCurrent.tense];
+    questionBlock = `
+      <div class="quiz-q">
+        <div class="quiz-prompt">Conjugate</div>
+        <div class="quiz-word">${prompt}</div>
+        ${item.en ? `<div class="quiz-context">${item.en}</div>` : ''}
+        <div class="quiz-conj-spec"><strong>${tenseLabel}</strong> · <em>${personLabel}</em></div>
+        ${quizCurrent.enHint ? `<div class="quiz-context" style="margin-top:6px">"${quizCurrent.enHint}"</div>` : ''}
+      </div>`;
+  } else {
+    questionBlock = `
+      <div class="quiz-q">
+        <div class="quiz-prompt">${quizCurrent.promptLabel}</div>
+        <div class="quiz-word">${prompt}</div>
+        ${quizCurrent.contextLine ? `<div class="quiz-context">${quizCurrent.contextLine}</div>` : ''}
+      </div>`;
+  }
+
+  // SRS info badge for the current item
+  const rec = srsRecord(item.it);
+  const srsBadge = rec
+    ? `<div class="srs-badge" title="Correct: ${rec.c}, Wrong: ${rec.w}, Level: ${rec.level}/6">L${rec.level} · ✓${rec.c} ✗${rec.w}</div>`
+    : `<div class="srs-badge new" title="First time seeing this">NEW</div>`;
+
   const feedback = chosen === null ? '' :
     chosen === correct
       ? `<div class="quiz-feedback correct">✓ Correct!</div>`
       : `<div class="quiz-feedback wrong">✗ Wrong — correct answer: <strong>${correct}</strong></div>`;
+
   return `
     <div class="cat-bar">${CATS.map(c=>`<div class="cat-pill${currentCat===c?' active':''}" onclick="setCat('${c}');startQuiz();render()">${c}</div>`).join('')}</div>
+    ${renderQuizControls()}
     <div class="quiz-wrap">
-      <div class="quiz-score">Question ${quizIndex+1}/${quizItems.length} — Score: ${quizScore}</div>
+      <div class="quiz-score">Question ${quizIndex+1}/${quizItems.length} — Score: ${quizScore} ${srsBadge}</div>
       <div class="fc-progress" style="width:100%;max-width:560px"><div class="fc-progress-bar" style="width:${pct}%"></div></div>
-      <div class="quiz-q">
-        <div class="quiz-prompt">What does this mean in English?</div>
-        <div class="quiz-word">${item.it}</div>
-        ${item.cat ? `<div class="quiz-context">${item.cat}</div>` : ''}
-      </div>
+      ${questionBlock}
       <div class="quiz-options">
         ${options.map((opt, i) => {
           let cls = 'quiz-opt';
@@ -1032,8 +1272,12 @@ function renderQuiz() {
 function answerQuiz(i) {
   if (quizAnswered || !quizCurrent) return;
   quizAnswered = true;
-  quizCurrent.chosen = quizCurrent.options[i];
-  if (quizCurrent.chosen === quizCurrent.item.en) quizScore++;
+  const chosen = quizCurrent.options[i];
+  quizCurrent.chosen = chosen;
+  const isCorrect = chosen === quizCurrent.correct;
+  if (isCorrect) quizScore++;
+  // Record into SRS — keyed on the item's Italian word so vocab + conjugate share progress per verb
+  srsRecordAnswer(quizCurrent.item.it, isCorrect);
   render();
 }
 
