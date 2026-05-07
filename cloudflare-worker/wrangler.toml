@@ -9,3 +9,10 @@ id = "ebc2a1979ed04d1eb106b2fa785b1967"
 
 [ai]
 binding = "AI"
+
+# ElevenLabs voice ID for Italian TTS. Not a secret — useless without the API key.
+# To swap voices: edit this and run `wrangler deploy`. The KV cache key includes
+# the voice ID, so old cached audio for the previous voice keeps working until
+# its 90-day TTL expires.
+[vars]
+ELEVENLABS_VOICE_ID = "gfKKsLN1k0oYYN9n2dXX"
