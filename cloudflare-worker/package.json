@@ -4,7 +4,10 @@
   "description": "Tiny proxy that stores your \"known words\" list in Cloudflare KV so the app syncs across devices.",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "deploy": "wrangler deploy",
+    "tail": "wrangler tail",
+    "secret": "wrangler secret put"
   },
   "keywords": [],
   "author": "",
