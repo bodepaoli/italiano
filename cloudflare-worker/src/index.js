@@ -165,6 +165,73 @@ export default {
       return json({ error: 'method not allowed' }, 405, cors);
     }
 
+    // /tts — ElevenLabs text-to-speech for Italian. Audio bytes cached in KV 90 days.
+    // Required Worker secrets/vars:
+    //   ELEVENLABS_API_KEY  (secret)  → set with: wrangler secret put ELEVENLABS_API_KEY
+    //   ELEVENLABS_VOICE_ID (var or secret) → ID of an ElevenLabs Italian voice
+    //   ELEVENLABS_MODEL_ID (var, optional) → defaults to eleven_multilingual_v2
+    if (url.pathname === '/tts') {
+      if (request.method !== 'GET') return json({ error: 'use GET' }, 405, cors);
+      const text = (url.searchParams.get('text') || '').trim().slice(0, 300);
+      if (text.length < 1) return json({ error: 'text required' }, 400, cors);
+      if (!env.ELEVENLABS_API_KEY) {
+        return json({ error: 'TTS not configured: missing ELEVENLABS_API_KEY' }, 503, cors);
+      }
+      const voiceId = env.ELEVENLABS_VOICE_ID;
+      if (!voiceId) {
+        return json({ error: 'TTS not configured: missing ELEVENLABS_VOICE_ID' }, 503, cors);
+      }
+      const modelId = env.ELEVENLABS_MODEL_ID || 'eleven_multilingual_v2';
+
+      const cacheKey = `tts:${voiceId}:${modelId}:${text}`;
+      // KV cache hit → return immediately
+      const cached = await env.KNOWN.get(cacheKey, { type: 'arrayBuffer' });
+      if (cached) {
+        return new Response(cached, {
+          headers: {
+            ...cors,
+            'Content-Type': 'audio/mpeg',
+            'Cache-Control': 'public, max-age=2592000',
+            'X-TTS-Cache': 'hit',
+          },
+        });
+      }
+
+      // Cache miss → call ElevenLabs
+      try {
+        const resp = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`, {
+          method: 'POST',
+          headers: {
+            'xi-api-key': env.ELEVENLABS_API_KEY,
+            'Content-Type': 'application/json',
+            'Accept': 'audio/mpeg',
+          },
+          body: JSON.stringify({
+            text,
+            model_id: modelId,
+            voice_settings: { stability: 0.5, similarity_boost: 0.75, style: 0.0, use_speaker_boost: true },
+          }),
+        });
+        if (!resp.ok) {
+          const errText = await resp.text();
+          return json({ error: `ElevenLabs ${resp.status}: ${errText.slice(0, 240)}` }, 502, cors);
+        }
+        const audio = await resp.arrayBuffer();
+        // Store in KV for 90 days. ArrayBuffer is supported directly.
+        await env.KNOWN.put(cacheKey, audio, { expirationTtl: 60 * 60 * 24 * 90 });
+        return new Response(audio, {
+          headers: {
+            ...cors,
+            'Content-Type': 'audio/mpeg',
+            'Cache-Control': 'public, max-age=2592000',
+            'X-TTS-Cache': 'miss',
+          },
+        });
+      } catch (e) {
+        return json({ error: 'TTS call failed: ' + (e.message || 'unknown') }, 500, cors);
+      }
+    }
+
     return json({ error: 'not found' }, 404, cors);
   }
 };

@@ -317,7 +317,7 @@
   <div class="nav-brand">
     <div class="flag"><div class="flag-g"></div><div class="flag-w"></div><div class="flag-r"></div></div>
     Bo's Italian
-    <span class="nav-version">v30</span>
+    <span class="nav-version">v31</span>
   </div>
   <div class="nav-stats">
     <div class="stat">Known: <span class="stat-num" id="known-count">0</span><span id="sync-dot" class="sync-dot none" title="Sync: not configured"></span></div>
@@ -1353,10 +1353,36 @@ function selfGrade(verdict) {
 }
 
 // ── Text-to-speech: speak Italian ──────────────────────────────────────────
-function speakIt(text) {
+// Tries the Worker's /tts endpoint first (ElevenLabs Italian voice via cached
+// KV bytes), falls back to browser SpeechSynthesis if Worker isn't configured
+// or returns an error. So the upgrade is automatic once the Worker is deployed.
+let _ttsAudio = null;  // currently-playing Audio element
+async function speakIt(text) {
+  const t = String(text || '').trim();
+  if (!t) return;
+  // Stop anything currently speaking
+  if (_ttsAudio) { try { _ttsAudio.pause(); } catch(e){} _ttsAudio = null; }
+  if ('speechSynthesis' in window) speechSynthesis.cancel();
+  // Try Worker (ElevenLabs) if user has configured sync (URL + passphrase)
+  if (syncUrl && syncPass) {
+    try {
+      const base = syncUrl.replace(/\/$/, '');
+      const url = `${base}/tts?text=${encodeURIComponent(t)}&pass=${encodeURIComponent(syncPass)}`;
+      const resp = await fetch(url);
+      if (resp.ok) {
+        const blob = await resp.blob();
+        if (blob.type && blob.type.startsWith('audio/')) {
+          _ttsAudio = new Audio(URL.createObjectURL(blob));
+          _ttsAudio.play().catch(() => {});
+          return;
+        }
+      }
+      // 5xx / wrong content-type → fall through to browser TTS silently
+    } catch (e) { /* network error → fall through */ }
+  }
+  // Fallback: browser SpeechSynthesis
   if (!('speechSynthesis' in window)) return;
-  speechSynthesis.cancel();
-  const u = new SpeechSynthesisUtterance(text);
+  const u = new SpeechSynthesisUtterance(t);
   u.lang = 'it-IT';
   u.rate = 0.9;
   speechSynthesis.speak(u);
