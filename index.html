@@ -135,6 +135,32 @@
   .quiz-conj-spec em { color: var(--blue); font-style: normal; }
   .srs-badge { display: inline-block; margin-left: 8px; padding: 2px 8px; border-radius: 999px; font-size: 0.7rem; font-weight: 500; background: var(--dark3); color: var(--muted); border: 1px solid var(--border); vertical-align: middle; }
   .srs-badge.new { background: rgba(74,158,255,0.12); border-color: #4a9eff; color: #4a9eff; }
+  .tts-btn { display: inline-flex; align-items: center; justify-content: center; width: 34px; height: 34px; border-radius: 50%; border: 1px solid var(--border); background: var(--dark2); color: var(--muted); cursor: pointer; font-size: 0.95rem; vertical-align: middle; margin-left: 6px; transition: all 0.2s; }
+  .tts-btn:hover { color: var(--accent); border-color: var(--accent); }
+  .translate-input { width: 100%; max-width: 560px; padding: 14px 16px; background: var(--card); border: 1px solid var(--border); border-radius: 12px; color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 1rem; resize: vertical; outline: none; transition: border-color 0.2s; }
+  .translate-input:focus { border-color: var(--accent); }
+  .mic-btn { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 24px; background: var(--card); border: 2px solid var(--border); border-radius: 20px; cursor: pointer; color: var(--text); font-family: 'DM Sans', sans-serif; transition: all 0.2s; min-width: 200px; }
+  .mic-btn:hover:not(.recording) { border-color: var(--accent); }
+  .mic-btn.recording { border-color: #f87171; background: rgba(206,43,55,0.1); animation: mic-pulse 1.2s ease-in-out infinite; }
+  .mic-icon { font-size: 2rem; }
+  .mic-label { font-size: 0.85rem; color: var(--muted); }
+  .mic-btn.recording .mic-label { color: #f87171; }
+  @keyframes mic-pulse { 0%,100% { box-shadow: 0 0 0 0 rgba(248,113,113,0.4); } 50% { box-shadow: 0 0 0 12px rgba(248,113,113,0); } }
+  .transcript { width: 100%; max-width: 560px; padding: 12px 16px; background: var(--dark3); border: 1px dashed var(--border); border-radius: 12px; color: var(--text); font-style: italic; text-align: center; }
+  .diff-block { width: 100%; max-width: 560px; padding: 12px 16px; background: var(--dark2); border-radius: 12px; }
+  .diff-label { font-size: 0.75rem; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; }
+  .diff-line { font-size: 1rem; line-height: 1.7; }
+  .diff-word { display: inline-block; padding: 1px 6px; border-radius: 4px; margin-right: 2px; }
+  .diff-word.match { color: #4ade80; background: rgba(0,146,70,0.12); }
+  .diff-word.extra { color: #f0c040; background: rgba(240,192,64,0.12); text-decoration: line-through; text-decoration-color: rgba(240,192,64,0.5); }
+  .diff-word.missing { color: #f87171; background: rgba(206,43,55,0.12); }
+  .diff-missing { margin-top: 8px; font-size: 0.85rem; color: var(--muted); }
+  .self-grade-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; padding: 8px 0; }
+  .self-grade-label { font-size: 0.85rem; color: var(--muted); margin-right: 4px; }
+  .qt-btn.correct-active { background: rgba(0,146,70,0.2); color: #4ade80; border: 1px solid #4ade80; }
+  .qt-btn.wrong-active   { background: rgba(206,43,55,0.2); color: #f87171; border: 1px solid #f87171; }
+  .answer-row { width: 100%; max-width: 560px; padding: 10px 14px; background: var(--dark3); border-radius: 10px; font-size: 0.95rem; color: var(--text); display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .answer-label { color: var(--muted); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px; }
   .quiz-score { font-size: 0.85rem; color: var(--muted); }
   .quiz-result { text-align: center; padding: 24px; }
   .quiz-result-big { font-family: 'Playfair Display', serif; font-size: 3rem; color: var(--accent); }
@@ -291,7 +317,7 @@
   <div class="nav-brand">
     <div class="flag"><div class="flag-g"></div><div class="flag-w"></div><div class="flag-r"></div></div>
     Bo's Italian
-    <span class="nav-version">v29</span>
+    <span class="nav-version">v30</span>
   </div>
   <div class="nav-stats">
     <div class="stat">Known: <span class="stat-num" id="known-count">0</span><span id="sync-dot" class="sync-dot none" title="Sync: not configured"></span></div>
@@ -983,7 +1009,12 @@ function toggleKnown(idx) {
 const SRS_INTERVALS_DAYS = [0.5, 1, 2, 5, 14, 30, 90];
 const DAY_MS = 24 * 60 * 60 * 1000;
 
-function srsKey(it) { return it; }
+function srsKey(it) {
+  if (typeof it === 'string') return it;
+  if (it && it.item && typeof it.item.it === 'string') return it.item.it;  // sentence-pair
+  if (it && typeof it.it === 'string') return it.it;                        // vocab entry
+  return String(it);
+}
 
 function srsRecord(it) {
   return srs[srsKey(it)] || null;
@@ -1031,10 +1062,26 @@ function quizPool() {
   // Pool = current category filter (no search)
   const items = currentCat === 'All' ? DATA : DATA.filter(d => d.cat === currentCat);
   if (quizMode === 'conjugate') {
-    // Only verbs with full tense data (need at least pres + one other tense)
+    // Only verbs with full tense data
     return items.filter(d =>
       d.tenses && d.tenses.pres && d.tenses.pres.length === 6
     );
+  }
+  if (quizMode === 'translate' || quizMode === 'speak') {
+    // Pool = sentence pairs. Each item is { item, it, en }.
+    const pool = [];
+    for (const item of items) {
+      if (Array.isArray(item.examples)) {
+        for (const ex of item.examples) {
+          if (ex.it && ex.en) pool.push({ item, it: ex.it, en: ex.en });
+        }
+      }
+      // Phrase-type entries where it/en are full sentences
+      if (item.type === 't-phrase' && item.it && item.en && item.it.split(/\s+/).length >= 2) {
+        pool.push({ item, it: item.it, en: item.en });
+      }
+    }
+    return pool;
   }
   return items;
 }
@@ -1072,6 +1119,7 @@ function buildVocabQuestion() {
   const options = [...wrongs, correct].sort(() => Math.random() - 0.5);
   quizCurrent = {
     kind: 'vocab',
+    qIndex: quizIndex,
     item,
     prompt: item[promptField],
     correct,
@@ -1079,6 +1127,7 @@ function buildVocabQuestion() {
     chosen: null,
     promptLabel: isItToEn ? 'What does this mean in English?' : 'What is this in Italian?',
     contextLine: item.cat || '',
+    direction: quizDir,
   };
 }
 
@@ -1115,6 +1164,7 @@ function buildConjugateQuestion() {
   const enHint = (item.tensesEn && item.tensesEn[tense] && item.tensesEn[tense][person]) || '';
   quizCurrent = {
     kind: 'conjugate',
+    qIndex: quizIndex,
     item,
     prompt: item.it,
     correct,
@@ -1126,13 +1176,197 @@ function buildConjugateQuestion() {
   };
 }
 
-function buildQuestion() {
-  if (quizMode === 'conjugate') buildConjugateQuestion();
-  else buildVocabQuestion();
+function buildTranslateQuestion() {
+  // quizItems entries are sentence pairs { item, it, en }
+  const sp = quizItems[quizIndex];
+  const isItToEn = quizDir === 'it-en';
+  quizCurrent = {
+    kind: 'translate',
+    qIndex: quizIndex,
+    item: sp.item,
+    sentence: { it: sp.it, en: sp.en },
+    prompt: isItToEn ? sp.it : sp.en,
+    correct: isItToEn ? sp.en : sp.it,
+    promptLabel: isItToEn ? 'Translate to English' : 'Translate to Italian',
+    direction: quizDir,
+    userAnswer: '',
+    submitted: false,
+    graded: null,        // 'correct' | 'wrong' (final, after self-grade)
+    gradeInfo: null,
+    diff: null,
+  };
 }
 
+function buildSpeakQuestion() {
+  // quizItems entries are sentence pairs { item, it, en }
+  // Speak mode: user reads the English and SAYS the Italian
+  const sp = quizItems[quizIndex];
+  quizCurrent = {
+    kind: 'speak',
+    qIndex: quizIndex,
+    item: sp.item,
+    sentence: { it: sp.it, en: sp.en },
+    prompt: sp.en,
+    correct: sp.it,
+    promptLabel: 'Say this in Italian',
+    transcript: '',
+    recording: false,
+    micError: null,
+    submitted: false,
+    graded: null,
+    gradeInfo: null,
+    diff: null,
+  };
+}
+
+function buildQuestion() {
+  if (quizMode === 'conjugate') buildConjugateQuestion();
+  else if (quizMode === 'translate') buildTranslateQuestion();
+  else if (quizMode === 'speak')     buildSpeakQuestion();
+  else                                buildVocabQuestion();
+}
+
+// ── Grading: word-level fuzzy match for free-text answers ─────────────────
+function normalizeText(s) {
+  return String(s || '')
+    .toLowerCase()
+    .normalize('NFD').replace(/[̀-ͯ]/g, '')   // strip accents — è ≈ e
+    .replace(/[^\p{L}\p{N}\s]/gu, ' ')                   // strip punctuation
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+function gradeAnswer(user, expected) {
+  const u = normalizeText(user);
+  const e = normalizeText(expected);
+  if (!u) return { score: 0, label: 'empty' };
+  if (u === e) return { score: 1, label: 'perfect' };
+  const uTokens = u.split(' ').filter(Boolean);
+  const eTokens = e.split(' ').filter(Boolean);
+  const uSet = new Set(uTokens);
+  const matched = eTokens.filter(w => uSet.has(w)).length;
+  const overlap = matched / Math.max(eTokens.length, 1);
+  const lenRatio = Math.min(uTokens.length, eTokens.length) / Math.max(uTokens.length, eTokens.length, 1);
+  const score = overlap * 0.8 + lenRatio * 0.2;
+  let label = 'miss';
+  if (score >= 0.95) label = 'perfect';
+  else if (score >= 0.7) label = 'close';
+  else if (score >= 0.4) label = 'partial';
+  return { score, label };
+}
+function computeDiff(user, expected) {
+  const uTokens = normalizeText(user).split(' ').filter(Boolean);
+  const eTokens = normalizeText(expected).split(' ').filter(Boolean);
+  const eSet = new Set(eTokens);
+  const uSet = new Set(uTokens);
+  const userMarked = uTokens.map(w => ({ word: w, status: eSet.has(w) ? 'match' : 'extra' }));
+  const missing = eTokens.filter(w => !uSet.has(w));
+  return { user: userMarked, missing };
+}
+
+// ── Free-text submit (Translate mode) ─────────────────────────────────────
+function submitTextAnswer() {
+  if (!quizCurrent || quizCurrent.kind !== 'translate' || quizCurrent.submitted) return;
+  const ta = document.getElementById('translate-input');
+  const userAnswer = (ta && ta.value || '').trim();
+  if (!userAnswer) return;
+  quizCurrent.userAnswer = userAnswer;
+  const grade = gradeAnswer(userAnswer, quizCurrent.correct);
+  quizCurrent.gradeInfo = grade;
+  quizCurrent.graded = grade.score >= 0.7 ? 'correct' : 'wrong';
+  quizCurrent.diff = computeDiff(userAnswer, quizCurrent.correct);
+  quizCurrent.submitted = true;
+  quizAnswered = true;
+  render();
+}
+
+// ── Speech recognition (Speak mode) ────────────────────────────────────────
+let speechRec = null;
+function startMic() {
+  if (!quizCurrent || quizCurrent.kind !== 'speak' || quizCurrent.submitted) return;
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) {
+    quizCurrent.micError = 'Speech recognition not supported in this browser. Try Chrome, Brave, or Safari (iOS 14.5+).';
+    render();
+    return;
+  }
+  if (speechRec) { try { speechRec.stop(); } catch(e){} }
+  speechRec = new SR();
+  speechRec.lang = 'it-IT';
+  speechRec.continuous = false;
+  speechRec.interimResults = true;
+  speechRec.maxAlternatives = 1;
+  quizCurrent.recording = true;
+  quizCurrent.transcript = '';
+  quizCurrent.micError = null;
+  speechRec.onresult = (e) => {
+    if (!quizCurrent || quizCurrent.kind !== 'speak') return;
+    let final = '', interim = '';
+    for (let i = 0; i < e.results.length; i++) {
+      if (e.results[i].isFinal) final += e.results[i][0].transcript;
+      else interim += e.results[i][0].transcript;
+    }
+    quizCurrent.transcript = (final + ' ' + interim).trim();
+    render();
+  };
+  speechRec.onend = () => {
+    if (!quizCurrent || quizCurrent.kind !== 'speak') return;
+    quizCurrent.recording = false;
+    speechRec = null;
+    if (quizCurrent.transcript && !quizCurrent.submitted) submitSpeech();
+    else render();
+  };
+  speechRec.onerror = (ev) => {
+    if (!quizCurrent || quizCurrent.kind !== 'speak') return;
+    quizCurrent.recording = false;
+    quizCurrent.micError = 'Mic error: ' + (ev.error || 'unknown') + (ev.error === 'not-allowed' ? ' — grant mic permission and try again.' : '');
+    speechRec = null;
+    render();
+  };
+  try { speechRec.start(); } catch(e) {
+    quizCurrent.recording = false;
+    quizCurrent.micError = 'Could not start mic: ' + e.message;
+    speechRec = null;
+  }
+  render();
+}
+function stopMic() {
+  if (speechRec) { try { speechRec.stop(); } catch(e){} }
+}
+function submitSpeech() {
+  if (!quizCurrent || quizCurrent.kind !== 'speak' || quizCurrent.submitted) return;
+  const transcript = (quizCurrent.transcript || '').trim();
+  if (!transcript) return;
+  const grade = gradeAnswer(transcript, quizCurrent.correct);
+  quizCurrent.gradeInfo = grade;
+  quizCurrent.graded = grade.score >= 0.7 ? 'correct' : 'wrong';
+  quizCurrent.diff = computeDiff(transcript, quizCurrent.correct);
+  quizCurrent.submitted = true;
+  quizAnswered = true;
+  render();
+}
+
+// User self-grade override (free-text/speech only)
+function selfGrade(verdict) {
+  if (!quizCurrent || !quizCurrent.submitted) return;
+  quizCurrent.graded = verdict;
+  render();
+}
+
+// ── Text-to-speech: speak Italian ──────────────────────────────────────────
+function speakIt(text) {
+  if (!('speechSynthesis' in window)) return;
+  speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(text);
+  u.lang = 'it-IT';
+  u.rate = 0.9;
+  speechSynthesis.speak(u);
+}
+window.speakIt = speakIt;
+
 function renderQuizControls() {
-  const dirRow = quizMode === 'vocab' ? `
+  // Direction toggle shown for modes where direction matters: vocab, translate
+  const showDir = quizMode === 'vocab' || quizMode === 'translate';
+  const dirRow = showDir ? `
     <div class="quiz-toggle">
       <button class="qt-btn ${quizDir==='it-en'?'active':''}" onclick="setQuizDir('it-en')">🇮🇹 → 🇬🇧</button>
       <button class="qt-btn ${quizDir==='en-it'?'active':''}" onclick="setQuizDir('en-it')">🇬🇧 → 🇮🇹</button>
@@ -1142,6 +1376,8 @@ function renderQuizControls() {
       <div class="quiz-toggle">
         <button class="qt-btn ${quizMode==='vocab'?'active':''}" onclick="setQuizMode('vocab')">📖 Vocab</button>
         <button class="qt-btn ${quizMode==='conjugate'?'active':''}" onclick="setQuizMode('conjugate')">🔁 Conjugate</button>
+        <button class="qt-btn ${quizMode==='translate'?'active':''}" onclick="setQuizMode('translate')">✍️ Translate</button>
+        <button class="qt-btn ${quizMode==='speak'?'active':''}" onclick="setQuizMode('speak')">🎤 Speak</button>
       </div>
       ${dirRow}
       <button class="qt-btn srs-btn ${quizSrs?'active':''}" onclick="toggleSrs()" title="${quizSrs?'Smart mode: prioritizes overdue + missed words':'Random mode: any items in pool'}">${quizSrs?'🎯 Smart':'🎲 Random'}</button>
@@ -1205,12 +1441,25 @@ function renderQuiz() {
     `;
   }
 
-  // Build the question once per quizIndex; reuse on subsequent renders so options + ordering don't reshuffle.
-  if (!quizCurrent || quizCurrent.item !== quizItems[quizIndex]) {
+  // Build the question once per quizIndex; reuse on subsequent renders.
+  if (!quizCurrent || quizCurrent.qIndex !== quizIndex) {
     buildQuestion();
   }
-  const { kind, item, prompt, options, correct, chosen } = quizCurrent;
+  const { kind, item, prompt, correct } = quizCurrent;
   const pct = (quizIndex / quizItems.length * 100).toFixed(0);
+
+  // Helper: speaker button for any Italian text. Escape both " and ' for safe HTML attribute embedding.
+  const ttsBtn = (txt) => {
+    const safe = JSON.stringify(String(txt || '')).replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+    return `<button class="tts-btn" onclick="event.stopPropagation();speakIt(${safe})" title="Hear in Italian">🔊</button>`;
+  };
+
+  // Determine which side of the prompt is Italian (for TTS button placement)
+  const promptIsItalian = (
+    (kind === 'vocab' && quizCurrent.direction === 'it-en') ||
+    kind === 'conjugate' ||
+    (kind === 'translate' && quizCurrent.direction === 'it-en')
+  );
 
   // Question header — varies by mode
   let questionBlock;
@@ -1220,40 +1469,39 @@ function renderQuiz() {
     questionBlock = `
       <div class="quiz-q">
         <div class="quiz-prompt">Conjugate</div>
-        <div class="quiz-word">${prompt}</div>
+        <div class="quiz-word">${prompt} ${ttsBtn(prompt)}</div>
         ${item.en ? `<div class="quiz-context">${item.en}</div>` : ''}
         <div class="quiz-conj-spec"><strong>${tenseLabel}</strong> · <em>${personLabel}</em></div>
         ${quizCurrent.enHint ? `<div class="quiz-context" style="margin-top:6px">"${quizCurrent.enHint}"</div>` : ''}
       </div>`;
-  } else {
+  } else if (kind === 'translate' || kind === 'speak') {
     questionBlock = `
       <div class="quiz-q">
         <div class="quiz-prompt">${quizCurrent.promptLabel}</div>
-        <div class="quiz-word">${prompt}</div>
+        <div class="quiz-word">${prompt} ${promptIsItalian ? ttsBtn(prompt) : ''}</div>
+        ${item.cat ? `<div class="quiz-context">from ${item.it} · ${item.cat}</div>` : ''}
+      </div>`;
+  } else {
+    // vocab
+    questionBlock = `
+      <div class="quiz-q">
+        <div class="quiz-prompt">${quizCurrent.promptLabel}</div>
+        <div class="quiz-word">${prompt} ${promptIsItalian ? ttsBtn(prompt) : ''}</div>
         ${quizCurrent.contextLine ? `<div class="quiz-context">${quizCurrent.contextLine}</div>` : ''}
       </div>`;
   }
 
-  // SRS info badge for the current item
-  const rec = srsRecord(item.it);
-  const srsBadge = rec
-    ? `<div class="srs-badge" title="Correct: ${rec.c}, Wrong: ${rec.w}, Level: ${rec.level}/6">L${rec.level} · ✓${rec.c} ✗${rec.w}</div>`
-    : `<div class="srs-badge new" title="First time seeing this">NEW</div>`;
-
-  const feedback = chosen === null ? '' :
-    chosen === correct
-      ? `<div class="quiz-feedback correct">✓ Correct!</div>`
-      : `<div class="quiz-feedback wrong">✗ Wrong — correct answer: <strong>${correct}</strong></div>`;
-
-  return `
-    <div class="cat-bar">${CATS.map(c=>`<div class="cat-pill${currentCat===c?' active':''}" onclick="setCat('${c}');startQuiz();render()">${c}</div>`).join('')}</div>
-    ${renderQuizControls()}
-    <div class="quiz-wrap">
-      <div class="quiz-score">Question ${quizIndex+1}/${quizItems.length} — Score: ${quizScore} ${srsBadge}</div>
-      <div class="fc-progress" style="width:100%;max-width:560px"><div class="fc-progress-bar" style="width:${pct}%"></div></div>
-      ${questionBlock}
+  // Body — varies by mode (MCQ options vs textarea vs mic)
+  let bodyBlock = '';
+  if (kind === 'vocab' || kind === 'conjugate') {
+    const chosen = quizCurrent.chosen;
+    const feedback = chosen === null ? '' :
+      chosen === correct
+        ? `<div class="quiz-feedback correct">✓ Correct!</div>`
+        : `<div class="quiz-feedback wrong">✗ Wrong — correct answer: <strong>${correct}</strong> ${ttsBtn(kind==='conjugate'||promptIsItalian?correct:item.it)}</div>`;
+    bodyBlock = `
       <div class="quiz-options">
-        ${options.map((opt, i) => {
+        ${quizCurrent.options.map((opt, i) => {
           let cls = 'quiz-opt';
           if (chosen !== null) {
             cls += ' disabled';
@@ -1264,7 +1512,102 @@ function renderQuiz() {
         }).join('')}
       </div>
       ${feedback}
-      ${quizAnswered ? `<button class="fc-btn primary" onclick="nextQuiz()">Next →</button>` : ''}
+    `;
+  } else if (kind === 'translate') {
+    const submitted = quizCurrent.submitted;
+    if (!submitted) {
+      bodyBlock = `
+        <textarea id="translate-input" class="translate-input" rows="3" placeholder="Type your translation..." autocapitalize="off" autocomplete="off" spellcheck="${quizCurrent.direction==='it-en'?'true':'false'}"></textarea>
+        <button class="fc-btn primary" onclick="submitTextAnswer()">Check Answer</button>
+      `;
+    } else {
+      const correctIsItalian = quizCurrent.direction === 'en-it';
+      bodyBlock = `
+        ${renderFreeTextResult()}
+        <div class="self-grade-row">
+          <div class="self-grade-label">Did you get it?</div>
+          <button class="qt-btn ${quizCurrent.graded==='wrong'?'active wrong-active':''}" onclick="selfGrade('wrong')">✗ Missed</button>
+          <button class="qt-btn ${quizCurrent.graded==='correct'?'active correct-active':''}" onclick="selfGrade('correct')">✓ Got it</button>
+        </div>
+        <div class="answer-row">
+          <span class="answer-label">Correct:</span>
+          <strong>${correct}</strong>
+          ${correctIsItalian ? ttsBtn(correct) : ''}
+        </div>
+      `;
+    }
+  } else if (kind === 'speak') {
+    const submitted = quizCurrent.submitted;
+    const recording = quizCurrent.recording;
+    const transcript = quizCurrent.transcript || '';
+    if (!submitted) {
+      bodyBlock = `
+        <button class="mic-btn ${recording?'recording':''}" onclick="${recording?'stopMic()':'startMic()'}" title="${recording?'Stop':'Tap to speak'}">
+          <span class="mic-icon">${recording?'⏹':'🎤'}</span>
+          <span class="mic-label">${recording?'Listening… (speak now)':'Tap to speak'}</span>
+        </button>
+        ${transcript ? `<div class="transcript">"${transcript}"</div>` : ''}
+        ${quizCurrent.micError ? `<div class="quiz-feedback wrong" style="margin-top:8px">${quizCurrent.micError}</div>` : ''}
+        ${transcript && !recording ? `<button class="fc-btn primary" onclick="submitSpeech()">Submit</button>` : ''}
+      `;
+    } else {
+      bodyBlock = `
+        ${renderFreeTextResult()}
+        <div class="self-grade-row">
+          <div class="self-grade-label">Did you say it right?</div>
+          <button class="qt-btn ${quizCurrent.graded==='wrong'?'active wrong-active':''}" onclick="selfGrade('wrong')">✗ No</button>
+          <button class="qt-btn ${quizCurrent.graded==='correct'?'active correct-active':''}" onclick="selfGrade('correct')">✓ Yes</button>
+        </div>
+        <div class="answer-row">
+          <span class="answer-label">Correct:</span>
+          <strong>${correct}</strong>
+          ${ttsBtn(correct)}
+        </div>
+      `;
+    }
+  }
+
+  // SRS info badge for the current item
+  const rec = srsRecord(item.it);
+  const srsBadge = rec
+    ? `<div class="srs-badge" title="Correct: ${rec.c}, Wrong: ${rec.w}, Level: ${rec.level}/6">L${rec.level} · ✓${rec.c} ✗${rec.w}</div>`
+    : `<div class="srs-badge new" title="First time seeing this">NEW</div>`;
+
+  const showNext = quizAnswered || (quizCurrent.submitted);
+  return `
+    <div class="cat-bar">${CATS.map(c=>`<div class="cat-pill${currentCat===c?' active':''}" onclick="setCat('${c}');startQuiz();render()">${c}</div>`).join('')}</div>
+    ${renderQuizControls()}
+    <div class="quiz-wrap">
+      <div class="quiz-score">Question ${quizIndex+1}/${quizItems.length} — Score: ${quizScore} ${srsBadge}</div>
+      <div class="fc-progress" style="width:100%;max-width:560px"><div class="fc-progress-bar" style="width:${pct}%"></div></div>
+      ${questionBlock}
+      ${bodyBlock}
+      ${showNext ? `<button class="fc-btn primary" onclick="nextQuiz()">Next →</button>` : ''}
+    </div>
+  `;
+}
+
+function renderFreeTextResult() {
+  const { graded, gradeInfo, diff, userAnswer, transcript, kind } = quizCurrent;
+  const said = kind === 'speak' ? transcript : userAnswer;
+  const cls = graded === 'correct' ? 'correct' : 'wrong';
+  const icon = graded === 'correct' ? '✓' : '✗';
+  const label = graded === 'correct'
+    ? (gradeInfo && gradeInfo.label === 'perfect' ? 'Perfect!' : 'Likely correct')
+    : (gradeInfo && gradeInfo.label === 'close' ? 'Close — but check' : 'Wrong');
+  // Word-by-word diff render
+  const userMarked = (diff && diff.user || []).map(w =>
+    `<span class="diff-word ${w.status}">${w.word}</span>`
+  ).join(' ');
+  const missingChips = (diff && diff.missing && diff.missing.length)
+    ? `<div class="diff-missing">Missing: ${diff.missing.map(w => `<span class="diff-word missing">${w}</span>`).join(' ')}</div>`
+    : '';
+  return `
+    <div class="quiz-feedback ${cls}">${icon} ${label}</div>
+    <div class="diff-block">
+      <div class="diff-label">${kind === 'speak' ? 'You said:' : 'You wrote:'}</div>
+      <div class="diff-line">${userMarked || `<em>${said}</em>`}</div>
+      ${missingChips}
     </div>
   `;
 }
@@ -1276,12 +1619,20 @@ function answerQuiz(i) {
   quizCurrent.chosen = chosen;
   const isCorrect = chosen === quizCurrent.correct;
   if (isCorrect) quizScore++;
-  // Record into SRS — keyed on the item's Italian word so vocab + conjugate share progress per verb
   srsRecordAnswer(quizCurrent.item.it, isCorrect);
   render();
 }
 
 function nextQuiz() {
+  // For free-text/speech modes, record SRS now using the final graded state (after any self-grade overrides)
+  if (quizCurrent && (quizCurrent.kind === 'translate' || quizCurrent.kind === 'speak') && quizCurrent.submitted) {
+    const isCorrect = quizCurrent.graded === 'correct';
+    if (isCorrect) quizScore++;
+    srsRecordAnswer(quizCurrent.item.it, isCorrect);
+  }
+  // Stop any in-flight mic recording
+  stopMic();
+  if ('speechSynthesis' in window) speechSynthesis.cancel();
   quizIndex++;
   quizAnswered = false;
   quizCurrent = null;
