@@ -137,6 +137,9 @@
   .srs-badge.new { background: rgba(74,158,255,0.12); border-color: #4a9eff; color: #4a9eff; }
   .tts-btn { display: inline-flex; align-items: center; justify-content: center; width: 34px; height: 34px; border-radius: 50%; border: 1px solid var(--border); background: var(--dark2); color: var(--muted); cursor: pointer; font-size: 0.95rem; vertical-align: middle; margin-left: 6px; transition: all 0.2s; }
   .tts-btn:hover { color: var(--accent); border-color: var(--accent); }
+  .copy-btn { display: inline-flex; align-items: center; justify-content: center; width: 30px; height: 30px; border-radius: 8px; border: 1px solid var(--border); background: var(--dark2); color: var(--muted); cursor: pointer; font-size: 0.8rem; vertical-align: middle; margin-left: 4px; transition: all 0.15s; }
+  .copy-btn:hover { color: var(--accent); border-color: var(--accent); }
+  .copy-btn.copied { color: #4ade80; border-color: #4ade80; }
   .translate-input { width: 100%; max-width: 560px; padding: 14px 16px; background: var(--card); border: 1px solid var(--border); border-radius: 12px; color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 1rem; resize: vertical; outline: none; transition: border-color 0.2s; }
   .translate-input:focus { border-color: var(--accent); }
   .mic-btn { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 24px; background: var(--card); border: 2px solid var(--border); border-radius: 20px; cursor: pointer; color: var(--text); font-family: 'DM Sans', sans-serif; transition: all 0.2s; min-width: 200px; }
@@ -317,7 +320,7 @@
   <div class="nav-brand">
     <div class="flag"><div class="flag-g"></div><div class="flag-w"></div><div class="flag-r"></div></div>
     Bo's Italian
-    <span class="nav-version">v31</span>
+    <span class="nav-version">v32</span>
   </div>
   <div class="nav-stats">
     <div class="stat">Known: <span class="stat-num" id="known-count">0</span><span id="sync-dot" class="sync-dot none" title="Sync: not configured"></span></div>
@@ -875,7 +878,7 @@ function renderAiSlot(q) {
   return `
     <div class="ai-upgrade-box">
       <div class="ai-upgrade-label">✨ Llama 3.1 70B</div>
-      <div class="ai-upgrade-trans">${escapeHtml(trans)}</div>
+      <div class="ai-upgrade-trans">${escapeHtml(trans)} ${copyBtn(trans)} ${isItInput ? '' : ttsBtn(trans)}</div>
       ${aiTranslation.note ? `<div class="ai-upgrade-note">💡 ${escapeHtml(aiTranslation.note)}</div>` : ''}
       <button class="ai-add-btn" style="margin-top:10px" onclick="openAddEntry(${JSON.stringify(itSide).replace(/"/g,'&quot;')}, ${JSON.stringify(enSide).replace(/"/g,'&quot;')})">➕ Add to my vocabulary</button>
     </div>
@@ -914,8 +917,8 @@ function renderNoResults() {
         <div class="ai-fallback-head">No vocab match — here's a quick translation:</div>
         <div class="ai-query">${escapeHtml(q)}</div>
         <div class="ai-results">
-          ${it_to_en ? `<div class="ai-row"><div class="ai-label">🇮🇹 → 🇺🇸</div><div class="ai-text">${escapeHtml(it_to_en)}</div></div>` : ''}
-          ${en_to_it ? `<div class="ai-row"><div class="ai-label">🇺🇸 → 🇮🇹</div><div class="ai-text">${escapeHtml(en_to_it)}</div></div>` : ''}
+          ${it_to_en ? `<div class="ai-row"><div class="ai-label">🇮🇹 → 🇺🇸</div><div class="ai-text">${escapeHtml(it_to_en)} ${copyBtn(it_to_en)}</div></div>` : ''}
+          ${en_to_it ? `<div class="ai-row"><div class="ai-label">🇺🇸 → 🇮🇹</div><div class="ai-text">${escapeHtml(en_to_it)} ${copyBtn(en_to_it)} ${ttsBtn(en_to_it)}</div></div>` : ''}
           ${!it_to_en && !en_to_it ? '<div class="ai-error">No translation available</div>' : ''}
         </div>
         ${canAdd ? `<button class="ai-add-btn" onclick="openAddEntry(${JSON.stringify(itGuess).replace(/"/g,'&quot;')}, ${JSON.stringify(enGuess).replace(/"/g,'&quot;')})">➕ Add to my vocabulary</button>` : ''}
@@ -1474,12 +1477,6 @@ function renderQuiz() {
   const { kind, item, prompt, correct } = quizCurrent;
   const pct = (quizIndex / quizItems.length * 100).toFixed(0);
 
-  // Helper: speaker button for any Italian text. Escape both " and ' for safe HTML attribute embedding.
-  const ttsBtn = (txt) => {
-    const safe = JSON.stringify(String(txt || '')).replace(/"/g, '&quot;').replace(/'/g, '&#39;');
-    return `<button class="tts-btn" onclick="event.stopPropagation();speakIt(${safe})" title="Hear in Italian">🔊</button>`;
-  };
-
   // Determine which side of the prompt is Italian (for TTS button placement)
   const promptIsItalian = (
     (kind === 'vocab' && quizCurrent.direction === 'it-en') ||
@@ -1754,8 +1751,8 @@ function renderModal() {
   document.getElementById('modal').innerHTML = `
     <div class="modal-overlay" onclick="if(event.target===this){selectedModal=null;renderModal()}">
       <div class="modal${d.tenses ? ' wide' : ''}">
-        <div class="modal-it">${hl(d.it)}</div>
-        <div class="modal-en">${hl(d.en)}</div>
+        <div class="modal-it">${hl(d.it)} ${copyBtn(d.it)} ${ttsBtn(d.it)}</div>
+        <div class="modal-en">${hl(d.en)} ${copyBtn(d.en)}</div>
         <span class="word-card-type ${d.type}" style="margin-bottom:16px;display:inline-block">${d.cat}</span>
         ${d.note ? `
           <div class="modal-section">
@@ -1804,6 +1801,45 @@ function clearSearch() {
   const el = document.querySelector('.search-input');
   if (el) el.focus();
 }
+
+// ── Copy to clipboard ──────────────────────────────────────────────────────
+function copyText(text, btn) {
+  const t = String(text || '');
+  const done = () => {
+    if (!btn) return;
+    const orig = btn.textContent;
+    btn.textContent = '✓';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = orig; btn.classList.remove('copied'); }, 1200);
+  };
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(t).then(done).catch(() => fallbackCopy(t, done));
+  } else {
+    fallbackCopy(t, done);
+  }
+}
+function fallbackCopy(text, cb) {
+  const ta = document.createElement('textarea');
+  ta.value = text;
+  ta.style.position = 'fixed';
+  ta.style.opacity = '0';
+  document.body.appendChild(ta);
+  ta.focus(); ta.select();
+  try { document.execCommand('copy'); } catch (e) {}
+  document.body.removeChild(ta);
+  if (cb) cb();
+}
+// Returns a small 📋 copy button. Escapes both quote types for safe attribute embedding.
+function copyBtn(text) {
+  const safe = JSON.stringify(String(text || '')).replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  return `<button class="copy-btn" onclick="event.stopPropagation();copyText(${safe}, this)" title="Copy to clipboard">📋</button>`;
+}
+// Returns a small 🔊 speaker button (ElevenLabs via Worker, browser TTS fallback).
+function ttsBtn(text) {
+  const safe = JSON.stringify(String(text || '')).replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  return `<button class="tts-btn" onclick="event.stopPropagation();speakIt(${safe})" title="Hear in Italian">🔊</button>`;
+}
+window.copyText = copyText;
 
 async function fetchAiTranslation(text) {
   const key = text.toLowerCase();
