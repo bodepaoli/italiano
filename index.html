@@ -111,6 +111,9 @@
   .quiz-prompt { font-size: 0.8rem; color: var(--muted); margin-bottom: 12px; text-transform: uppercase; letter-spacing: 1px; }
   .quiz-word { font-family: 'Playfair Display', serif; font-size: 2rem; color: var(--white); margin-bottom: 8px; }
   .quiz-context { font-size: 0.85rem; color: var(--muted); font-style: italic; }
+  .quiz-ex { margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--border); font-size: 0.95rem; color: #60a5fa; font-style: italic; }
+  .quiz-ex strong { color: var(--white); font-style: normal; }
+  .quiz-ex .quiz-ex-en { display: block; font-size: 0.8rem; color: var(--muted); margin-top: 3px; }
   .quiz-options { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: 100%; max-width: 560px; }
   .quiz-opt { padding: 14px 16px; background: var(--card); border: 1px solid var(--border); border-radius: 12px; cursor: pointer; font-family: 'DM Sans', sans-serif; font-size: 0.9rem; color: var(--text); transition: all 0.2s; text-align: left; }
   .quiz-opt:hover:not(.disabled) { border-color: var(--blue); color: var(--white); }
@@ -320,7 +323,7 @@
   <div class="nav-brand">
     <div class="flag"><div class="flag-g"></div><div class="flag-w"></div><div class="flag-r"></div></div>
     Bo's Italian
-    <span class="nav-version">v32</span>
+    <span class="nav-version">v33</span>
   </div>
   <div class="nav-stats">
     <div class="stat">Known: <span class="stat-num" id="known-count">0</span><span id="sync-dot" class="sync-dot none" title="Sync: not configured"></span></div>
@@ -1506,11 +1509,16 @@ function renderQuiz() {
       </div>`;
   } else {
     // vocab
+    // Example sentence for the quizzer to read aloud — builds word associations.
+    // it→en: shown with the question (the Italian sentence doesn't reveal the English answer).
+    // en→it: the sentence contains the answer, so it appears only after answering.
+    const exVisible = item.ex && (quizCurrent.direction === 'it-en' || quizCurrent.chosen !== null);
     questionBlock = `
       <div class="quiz-q">
         <div class="quiz-prompt">${quizCurrent.promptLabel}</div>
         <div class="quiz-word">${prompt} ${promptIsItalian ? ttsBtn(prompt) : ''}</div>
         ${quizCurrent.contextLine ? `<div class="quiz-context">${quizCurrent.contextLine}</div>` : ''}
+        ${exVisible ? `<div class="quiz-ex">💬 ${hlWordInEx(item.ex, item.it)} ${ttsBtn(item.ex)}</div>` : ''}
       </div>`;
   }
 
@@ -1522,6 +1530,14 @@ function renderQuiz() {
       chosen === correct
         ? `<div class="quiz-feedback correct">✓ Correct!</div>`
         : `<div class="quiz-feedback wrong">✗ Wrong — correct answer: <strong>${correct}</strong> ${ttsBtn(kind==='conjugate'||promptIsItalian?correct:item.it)}</div>`;
+    // Conjugate mode: after answering, show the example sentence in the quizzed tense
+    // (examples[] is ordered pres, past, imperf, fut, cond — sentences reveal answers, so post-answer only)
+    let exAfter = '';
+    if (kind === 'conjugate' && chosen !== null && Array.isArray(item.examples)) {
+      const ti = ['pres','past','imperf','fut','cond'].indexOf(quizCurrent.tense);
+      const tex = item.examples[ti];
+      if (tex && tex.it) exAfter = `<div class="quiz-ex" style="border-top:none;padding-top:0">💬 ${tex.it} ${ttsBtn(tex.it)}${tex.en ? `<span class="quiz-ex-en">${tex.en}</span>` : ''}</div>`;
+    }
     bodyBlock = `
       <div class="quiz-options">
         ${quizCurrent.options.map((opt, i) => {
@@ -1535,6 +1551,7 @@ function renderQuiz() {
         }).join('')}
       </div>
       ${feedback}
+      ${exAfter}
     `;
   } else if (kind === 'translate') {
     const submitted = quizCurrent.submitted;
@@ -1835,6 +1852,17 @@ function copyBtn(text) {
   return `<button class="copy-btn" onclick="event.stopPropagation();copyText(${safe}, this)" title="Copy to clipboard">📋</button>`;
 }
 // Returns a small 🔊 speaker button (ElevenLabs via Worker, browser TTS fallback).
+// Bold the vocab word inside its example sentence (exact whole-word match; leaves the
+// sentence untouched when it only contains a conjugated/inflected form).
+function hlWordInEx(sentence, word) {
+  const s = String(sentence || ''), w = String(word || '').trim();
+  if (!s || !w) return s;
+  const esc = w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  try {
+    return s.replace(new RegExp(`(^|[^\\p{L}])(${esc})(?=[^\\p{L}]|$)`, 'iu'), '$1<strong>$2</strong>');
+  } catch (e) { return s; }
+}
+
 function ttsBtn(text) {
   const safe = JSON.stringify(String(text || '')).replace(/"/g, '&quot;').replace(/'/g, '&#39;');
   return `<button class="tts-btn" onclick="event.stopPropagation();speakIt(${safe})" title="Hear in Italian">🔊</button>`;
