@@ -108,6 +108,7 @@ const VOCAB = [
   {it:"In bocca al lupo!",en:"Good luck! (lit: into the wolf's mouth)",type:"t-phrase",cat:"Phrases",note:"Response: Crepi! (May it die!)",ex:"Domani hai l'esame? In bocca al lupo!"},
   {it:"Da portare via.",en:"To go / Takeaway.",type:"t-phrase",cat:"Phrases",note:"At a bar or restaurant",ex:"Una pizza da portare via, per favore."},
   {it:"Posso pagare con la carta?",en:"Can I pay by card?",type:"t-phrase",cat:"Phrases",note:"Very important in Italy!",ex:"Scusi, posso pagare con la carta?"},
+  {it:"Devo pagare?",en:"Do I have to pay?",type:"t-phrase",cat:"Phrases",note:"dovere + infinitive — devo = I must / have to",ex:"Scusi, devo pagare adesso?"},
   {it:"Si accettano carte?",en:"Do you accept cards?",type:"t-phrase",cat:"Phrases",note:"accettare = to accept",ex:"Buongiorno, si accettano carte qui?"},
   {it:"Anch'io!",en:"Me too!",type:"t-phrase",cat:"Phrases",note:"anch' + io — apostrophe before vowel",ex:"Tu ami il caffè? Anch'io!"},
   {it:"Neanche io.",en:"Me neither.",type:"t-phrase",cat:"Phrases",note:"negative version of anch'io",ex:"Non bevo vino. Neanche io."},
