@@ -114,6 +114,32 @@
   .quiz-ex { margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--border); font-size: 0.95rem; color: #60a5fa; font-style: italic; }
   .quiz-ex strong { color: var(--white); font-style: normal; }
   .quiz-ex .quiz-ex-en { display: block; font-size: 0.8rem; color: var(--muted); margin-top: 3px; }
+
+  .tutor-wrap { padding: 20px; display: flex; flex-direction: column; align-items: center; gap: 14px; }
+  .tutor-card { width: 100%; max-width: 560px; background: var(--card); border: 1px solid var(--border); border-radius: 20px; padding: 24px; text-align: center; }
+  .tutor-title { font-family: 'Playfair Display', serif; font-size: 1.5rem; color: var(--white); margin-bottom: 6px; }
+  .tutor-sub { color: var(--muted); font-size: 0.85rem; line-height: 1.5; }
+  .tutor-status-row { display: flex; align-items: center; justify-content: center; gap: 10px; margin: 16px 0 4px; font-size: 0.85rem; color: var(--muted); }
+  .tutor-dot { width: 10px; height: 10px; border-radius: 50%; background: #555; }
+  .tutor-dot.live { background: #4ade80; animation: tutorPulse 1.6s ease-in-out infinite; }
+  .tutor-dot.connecting { background: var(--accent); animation: tutorPulse 0.8s ease-in-out infinite; }
+  @keyframes tutorPulse { 0%,100% { opacity: 1; } 50% { opacity: 0.35; } }
+  .tutor-timer { font-variant-numeric: tabular-nums; color: var(--text); }
+  .tutor-talk-btn { margin: 14px auto 4px; width: 96px; height: 96px; border-radius: 50%; border: 2px solid var(--accent); background: rgba(240,192,64,0.1); color: var(--accent); font-size: 2rem; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; }
+  .tutor-talk-btn:hover { background: rgba(240,192,64,0.2); }
+  .tutor-talk-btn.live { border-color: #f87171; background: rgba(206,43,55,0.12); color: #f87171; }
+  .tutor-btn-label { font-size: 0.8rem; color: var(--muted); margin-bottom: 8px; }
+  .tutor-controls { display: flex; gap: 10px; justify-content: center; margin-top: 10px; }
+  .tutor-quota { font-size: 0.72rem; color: var(--muted); margin-top: 10px; }
+  .tutor-transcript { width: 100%; max-width: 560px; min-height: 160px; max-height: 45vh; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; padding: 14px; background: var(--dark2); border: 1px solid var(--border); border-radius: 14px; text-align: left; }
+  .tutor-msg { padding: 8px 12px; border-radius: 10px; font-size: 0.92rem; line-height: 1.45; max-width: 85%; color: var(--text); }
+  .tutor-msg.you { background: rgba(240,192,64,0.08); border: 1px solid rgba(240,192,64,0.25); align-self: flex-end; }
+  .tutor-msg.tutor { background: var(--card); border: 1px solid var(--border); align-self: flex-start; }
+  .tutor-msg.live { opacity: 0.75; }
+  .tutor-msg-who { display: block; font-size: 0.62rem; text-transform: uppercase; letter-spacing: 0.6px; color: var(--muted); margin-bottom: 2px; }
+  .tutor-empty { color: var(--muted); font-size: 0.85rem; font-style: italic; text-align: center; margin: auto; }
+  .tutor-note { width: 100%; max-width: 560px; padding: 10px 14px; border-radius: 10px; font-size: 0.85rem; text-align: center; background: var(--dark2); border: 1px solid var(--border); color: var(--muted); }
+  .tutor-note.error { background: rgba(206,43,55,0.12); border-color: #f87171; color: #f87171; }
   .quiz-options { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: 100%; max-width: 560px; }
   .quiz-opt { padding: 14px 16px; background: var(--card); border: 1px solid var(--border); border-radius: 12px; cursor: pointer; font-family: 'DM Sans', sans-serif; font-size: 0.9rem; color: var(--text); transition: all 0.2s; text-align: left; }
   .quiz-opt:hover:not(.disabled) { border-color: var(--blue); color: var(--white); }
@@ -323,7 +349,7 @@
   <div class="nav-brand">
     <div class="flag"><div class="flag-g"></div><div class="flag-w"></div><div class="flag-r"></div></div>
     Bo's Italian
-    <span class="nav-version">v34</span>
+    <span class="nav-version">v35</span>
   </div>
   <div class="nav-stats">
     <div class="stat">Known: <span class="stat-num" id="known-count">0</span><span id="sync-dot" class="sync-dot none" title="Sync: not configured"></span></div>
@@ -336,6 +362,7 @@
   <div class="tab active" onclick="setTab('browse')">📚 Browse</div>
   <div class="tab" onclick="setTab('flashcard')">🃏 Flashcards</div>
   <div class="tab" onclick="setTab('quiz')">🎯 Quiz</div>
+  <div class="tab" onclick="setTab('tutor')">🗣️ Tutor</div>
   <div class="tab" onclick="setTab('cheat')">📋 Cheat Sheets</div>
 </div>
 
@@ -832,9 +859,11 @@ function getFiltered() {
 }
 
 function setTab(tab) {
+  // Leaving the Tutor tab ends any live voice session (mic + audio must not keep running)
+  if (tab !== 'tutor' && typeof tutorState !== 'undefined' && tutorState !== 'idle') stopTutor();
   currentTab = tab;
   document.querySelectorAll('.tab').forEach((t,i) => {
-    t.classList.toggle('active', ['browse','flashcard','quiz','cheat'][i] === tab);
+    t.classList.toggle('active', ['browse','flashcard','quiz','tutor','cheat'][i] === tab);
   });
   if (tab === 'flashcard') {
     fcItems = getFiltered().sort(() => Math.random() - 0.5);
@@ -1398,6 +1427,182 @@ async function speakIt(text) {
   speechSynthesis.speak(u);
 }
 window.speakIt = speakIt;
+
+// ── Voice Tutor — live Italian conversation via OpenAI Realtime (WebRTC) ──
+// The Worker mints a short-lived token (/voice-token, passphrase-gated); the
+// browser then talks directly to OpenAI. The real API key never leaves the Worker.
+const TUTOR_MAX_MINUTES = 30;   // client-side auto-stop — spend guard
+
+let tutorState = 'idle';        // 'idle' | 'connecting' | 'live'
+let tutorError = '';            // error banner text
+let tutorNote = '';             // info banner text (e.g. why the session ended)
+let tutorPc = null, tutorDc = null, tutorMic = null, tutorAudioEl = null;
+let tutorMuted = false;
+let tutorLog = [];              // finished turns: { who: 'you'|'tutor', text }
+let tutorLive = '';             // tutor sentence currently being spoken (delta accumulator)
+let tutorStartedAt = 0, tutorTimer = null, tutorQuota = null;
+
+async function startTutor() {
+  if (tutorState !== 'idle') return;
+  tutorError = ''; tutorNote = '';
+  if (!syncUrl || !syncPass) {
+    tutorError = 'Set up sync first (⚙ settings) — the tutor connects through your sync worker.';
+    render(); return;
+  }
+  tutorState = 'connecting'; tutorLog = []; tutorLive = ''; tutorQuota = null;
+  render();
+  try {
+    // 1. Ephemeral session token from the Worker
+    const base = syncUrl.replace(/\/$/, '');
+    const tokResp = await fetch(`${base}/voice-token?pass=${encodeURIComponent(syncPass)}`, { method: 'POST' });
+    const tok = await tokResp.json().catch(() => ({}));
+    if (!tokResp.ok || !tok.token) throw new Error(tok.error || `token request failed (${tokResp.status})`);
+    tutorQuota = { used: tok.sessionsUsedToday, cap: tok.cap };
+
+    // 2. Microphone
+    tutorMic = await navigator.mediaDevices.getUserMedia({ audio: true });
+
+    // 3. WebRTC peer connection to OpenAI
+    tutorPc = new RTCPeerConnection();
+    tutorAudioEl = new Audio();
+    tutorAudioEl.autoplay = true;
+    tutorPc.ontrack = (e) => { tutorAudioEl.srcObject = e.streams[0]; };
+    tutorMic.getTracks().forEach(t => tutorPc.addTrack(t, tutorMic));
+    tutorDc = tutorPc.createDataChannel('oai-events');
+    tutorDc.onmessage = (e) => handleTutorEvent(e.data);
+    tutorPc.onconnectionstatechange = () => {
+      if (tutorPc && ['failed','disconnected','closed'].includes(tutorPc.connectionState) && tutorState === 'live') {
+        stopTutor('Connection lost — tap Start to reconnect.');
+      }
+    };
+    const offer = await tutorPc.createOffer();
+    await tutorPc.setLocalDescription(offer);
+    const sdpResp = await fetch(`https://api.openai.com/v1/realtime/calls?model=${encodeURIComponent(tok.model)}`, {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${tok.token}`, 'Content-Type': 'application/sdp' },
+      body: offer.sdp,
+    });
+    if (!sdpResp.ok) throw new Error(`OpenAI call setup failed (${sdpResp.status})`);
+    await tutorPc.setRemoteDescription({ type: 'answer', sdp: await sdpResp.text() });
+
+    tutorState = 'live';
+    tutorMuted = false;
+    tutorStartedAt = Date.now();
+    tutorTimer = setInterval(tutorTick, 1000);
+    render();
+  } catch (e) {
+    cleanupTutor();
+    tutorState = 'idle';
+    tutorError = (e && e.name === 'NotAllowedError')
+      ? 'Microphone access denied — allow the mic for this site and try again.'
+      : (e.message || 'Could not start the tutor.');
+    render();
+  }
+}
+
+function tutorTick() {
+  const el = document.getElementById('tutor-timer');
+  if (el && tutorStartedAt) {
+    const s = Math.floor((Date.now() - tutorStartedAt) / 1000);
+    el.textContent = `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`;
+  }
+  if (tutorStartedAt && Date.now() - tutorStartedAt > TUTOR_MAX_MINUTES * 60 * 1000) {
+    stopTutor(`Auto-ended after ${TUTOR_MAX_MINUTES} minutes.`);
+  }
+}
+
+function handleTutorEvent(raw) {
+  let ev; try { ev = JSON.parse(raw); } catch { return; }
+  const t = ev.type || '';
+  if (t === 'conversation.item.input_audio_transcription.completed') {
+    const text = (ev.transcript || '').trim();
+    if (text) tutorLog.push({ who: 'you', text });
+    updateTutorTranscript();
+  } else if (t === 'response.output_audio_transcript.delta' || t === 'response.audio_transcript.delta') {
+    tutorLive += ev.delta || '';
+    updateTutorTranscript();
+  } else if (t === 'response.output_audio_transcript.done' || t === 'response.audio_transcript.done') {
+    const text = ((ev.transcript || tutorLive) || '').trim();
+    if (text) tutorLog.push({ who: 'tutor', text });
+    tutorLive = '';
+    updateTutorTranscript();
+  } else if (t === 'error') {
+    tutorLog.push({ who: 'tutor', text: '⚠️ ' + ((ev.error && ev.error.message) || 'error') });
+    updateTutorTranscript();
+  }
+}
+
+function tutorTranscriptHtml() {
+  const rows = tutorLog.map(m => `
+    <div class="tutor-msg ${m.who}"><span class="tutor-msg-who">${m.who === 'you' ? 'You' : 'Tutor'}</span>${escapeHtml(m.text)}</div>`).join('');
+  const live = tutorLive ? `<div class="tutor-msg tutor live"><span class="tutor-msg-who">Tutor</span>${escapeHtml(tutorLive)}…</div>` : '';
+  return (rows + live) || `<div class="tutor-empty">${tutorState === 'live' ? 'Say “Ciao!” to get started 👋' : 'Your conversation will appear here.'}</div>`;
+}
+
+function updateTutorTranscript() {
+  const box = document.getElementById('tutor-transcript');
+  if (!box) return;
+  box.innerHTML = tutorTranscriptHtml();
+  box.scrollTop = box.scrollHeight;
+}
+
+function toggleTutorMute() {
+  if (!tutorMic) return;
+  tutorMuted = !tutorMuted;
+  tutorMic.getAudioTracks().forEach(t => { t.enabled = !tutorMuted; });
+  render();
+}
+
+function cleanupTutor() {
+  if (tutorTimer) { clearInterval(tutorTimer); tutorTimer = null; }
+  if (tutorDc) { try { tutorDc.close(); } catch (e) {} tutorDc = null; }
+  if (tutorPc) { try { tutorPc.close(); } catch (e) {} tutorPc = null; }
+  if (tutorMic) { tutorMic.getTracks().forEach(t => t.stop()); tutorMic = null; }
+  if (tutorAudioEl) { try { tutorAudioEl.pause(); } catch (e) {} tutorAudioEl = null; }
+  tutorStartedAt = 0;
+}
+
+function stopTutor(note) {
+  cleanupTutor();
+  tutorState = 'idle';
+  tutorNote = note || '';
+  if (currentTab === 'tutor') render();
+}
+
+function renderTutor() {
+  const live = tutorState === 'live';
+  const connecting = tutorState === 'connecting';
+  const statusLabel = live ? 'Live — speak naturally' : connecting ? 'Connecting…' : 'Ready';
+  const banner = tutorError
+    ? `<div class="tutor-note error">${escapeHtml(tutorError)}</div>`
+    : tutorNote
+      ? `<div class="tutor-note">${escapeHtml(tutorNote)}</div>`
+      : '';
+  return `
+    <div class="tutor-wrap">
+      <div class="tutor-card">
+        <div class="tutor-title">🗣️ Voice Tutor</div>
+        <div class="tutor-sub">Live Italian conversation practice. She speaks slowly at your level, keeps you talking, and gently corrects mistakes. Just talk — no buttons between turns.</div>
+        <div class="tutor-status-row">
+          <span class="tutor-dot ${live ? 'live' : connecting ? 'connecting' : ''}"></span>
+          <span>${statusLabel}</span>
+          ${live ? `<span class="tutor-timer" id="tutor-timer">00:00</span>` : ''}
+        </div>
+        <div class="tutor-talk-btn ${live ? 'live' : ''}" onclick="${live || connecting ? 'stopTutor()' : 'startTutor()'}" role="button" aria-label="${live ? 'End session' : 'Start session'}">
+          ${live ? '⏹' : connecting ? '…' : '🎙'}
+        </div>
+        <div class="tutor-btn-label">${live ? 'Tap to end' : connecting ? 'Setting up the call…' : 'Tap to start a session'}</div>
+        ${live ? `
+        <div class="tutor-controls">
+          <button class="fc-btn" onclick="toggleTutorMute()">${tutorMuted ? '🔇 Unmute mic' : '🎤 Mute mic'}</button>
+        </div>` : ''}
+        ${tutorQuota ? `<div class="tutor-quota">Session ${tutorQuota.used} of ${tutorQuota.cap} today · auto-ends at ${TUTOR_MAX_MINUTES} min</div>` : ''}
+      </div>
+      ${banner}
+      <div class="tutor-transcript" id="tutor-transcript">${tutorTranscriptHtml()}</div>
+    </div>
+  `;
+}
 
 function renderQuizControls() {
   // Direction toggle shown for modes where direction matters: vocab, translate
@@ -1989,6 +2194,7 @@ function render() {
   if (currentTab === 'browse') html = renderBrowse();
   else if (currentTab === 'flashcard') html = renderFlashcard();
   else if (currentTab === 'quiz') html = renderQuiz();
+  else if (currentTab === 'tutor') html = renderTutor();
   else if (currentTab === 'cheat') html = renderCheat();
 
   const searchEl = document.querySelector('.search-input');

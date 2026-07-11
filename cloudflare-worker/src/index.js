@@ -17,7 +17,7 @@ function corsHeaders(origin) {
   const allow = ALLOWED_ORIGINS.includes(origin) ? origin : 'https://bodepaoli.github.io';
   return {
     'Access-Control-Allow-Origin': allow,
-    'Access-Control-Allow-Methods': 'GET, PUT, OPTIONS',
+    'Access-Control-Allow-Methods': 'GET, PUT, POST, OPTIONS',
     'Access-Control-Allow-Headers': 'Content-Type',
     'Access-Control-Max-Age': '86400',
     'Vary': 'Origin',
@@ -229,6 +229,76 @@ export default {
         });
       } catch (e) {
         return json({ error: 'TTS call failed: ' + (e.message || 'unknown') }, 500, cors);
+      }
+    }
+
+    // /voice-token — mint an ephemeral OpenAI Realtime token for the voice tutor.
+    // The real OPENAI_API_KEY never leaves the Worker; the browser gets a short-lived
+    // key (10 min to establish the WebRTC call). Passphrase-gated like every other
+    // endpoint, plus a daily session cap as a spend backstop.
+    // Required secrets/vars:
+    //   OPENAI_API_KEY (secret) → set with: wrangler secret put OPENAI_API_KEY
+    //   VOICE_MODEL / VOICE_VOICE / VOICE_MAX_SESSIONS_PER_DAY (vars, optional)
+    if (url.pathname === '/voice-token') {
+      if (request.method !== 'POST') return json({ error: 'use POST' }, 405, cors);
+      if (!env.OPENAI_API_KEY) {
+        return json({ error: 'Voice tutor not configured: missing OPENAI_API_KEY' }, 503, cors);
+      }
+
+      const cap = parseInt(env.VOICE_MAX_SESSIONS_PER_DAY || '30', 10);
+      const day = new Date().toISOString().slice(0, 10);
+      const capKey = `voice:sessions:${day}`;
+      const used = parseInt((await env.KNOWN.get(capKey)) || '0', 10);
+      if (used >= cap) {
+        return json({ error: `Daily voice session limit reached (${cap}). Resets at midnight UTC.` }, 429, cors);
+      }
+
+      const model = env.VOICE_MODEL || 'gpt-realtime-2.1';
+      const voice = env.VOICE_VOICE || 'marin';
+      const instructions = [
+        "You are Bo's personal Italian tutor and conversation partner. Bo is an adult American",
+        "beginner (A1-A2) studying Italian with a tutor, preparing to work in Italy.",
+        "",
+        "- Speak mostly Italian, slowly and clearly, using simple everyday vocabulary a beginner knows.",
+        "- Keep your turns SHORT: one or two sentences, then a question that keeps Bo talking.",
+        "  Bo should speak more than you do.",
+        "- When Bo makes a mistake, correct it gently: say the corrected sentence naturally, add a",
+        "  one-line explanation in English only when it's a pattern worth learning, then move on.",
+        "- If Bo is stuck or switches to English, help briefly in English, then steer back to Italian.",
+        "- Topics: daily life, food, travel, work, the gym, family — concrete everyday situations.",
+        "- Be warm, patient, and encouraging. Never lecture.",
+      ].join('\n');
+
+      try {
+        const resp = await fetch('https://api.openai.com/v1/realtime/client_secrets', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${env.OPENAI_API_KEY}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            expires_after: { anchor: 'created_at', seconds: 600 },
+            session: {
+              type: 'realtime',
+              model,
+              instructions,
+              audio: {
+                input: { transcription: { model: 'gpt-4o-mini-transcribe' } },
+                output: { voice },
+              },
+            },
+          }),
+        });
+        if (!resp.ok) {
+          const errText = await resp.text();
+          return json({ error: `OpenAI ${resp.status}: ${errText.slice(0, 240)}` }, 502, cors);
+        }
+        const data = await resp.json();
+        if (!data.value) return json({ error: 'OpenAI returned no client secret' }, 502, cors);
+        await env.KNOWN.put(capKey, String(used + 1), { expirationTtl: 60 * 60 * 48 });
+        return json({ token: data.value, model, sessionsUsedToday: used + 1, cap }, 200, cors);
+      } catch (e) {
+        return json({ error: 'voice token failed: ' + (e.message || 'unknown') }, 500, cors);
       }
     }
 
