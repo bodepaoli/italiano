@@ -349,7 +349,7 @@
   <div class="nav-brand">
     <div class="flag"><div class="flag-g"></div><div class="flag-w"></div><div class="flag-r"></div></div>
     Bo's Italian
-    <span class="nav-version">v36</span>
+    <span class="nav-version">v37</span>
   </div>
   <div class="nav-stats">
     <div class="stat">Known: <span class="stat-num" id="known-count">0</span><span id="sync-dot" class="sync-dot none" title="Sync: not configured"></span></div>
@@ -1441,6 +1441,12 @@ let tutorMuted = false;
 let tutorLog = [];              // finished turns: { who: 'you'|'tutor', text }
 let tutorLive = '';             // tutor sentence currently being spoken (delta accumulator)
 let tutorStartedAt = 0, tutorTimer = null, tutorQuota = null;
+let tutorNeedsTap = false;      // autoplay was blocked; user must tap once to hear audio
+
+function tutorUnmuteTap() {
+  if (!tutorAudioEl) return;
+  tutorAudioEl.play().then(() => { tutorNeedsTap = false; render(); }).catch(() => {});
+}
 
 async function startTutor() {
   if (tutorState !== 'idle') return;
@@ -1450,6 +1456,14 @@ async function startTutor() {
     render(); return;
   }
   tutorState = 'connecting'; tutorLog = []; tutorLive = ''; tutorQuota = null;
+  tutorNeedsTap = false;
+  // Create the audio sink NOW, inside the tap gesture — after the awaits below the
+  // gesture context is gone and iOS/Chrome autoplay policy can silently block playback.
+  tutorAudioEl = document.createElement('audio');
+  tutorAudioEl.autoplay = true;
+  tutorAudioEl.setAttribute('playsinline', '');
+  tutorAudioEl.style.display = 'none';
+  document.body.appendChild(tutorAudioEl);
   render();
   try {
     // 1. Ephemeral session token from the Worker
@@ -1464,9 +1478,15 @@ async function startTutor() {
 
     // 3. WebRTC peer connection to OpenAI
     tutorPc = new RTCPeerConnection();
-    tutorAudioEl = new Audio();
-    tutorAudioEl.autoplay = true;
-    tutorPc.ontrack = (e) => { tutorAudioEl.srcObject = e.streams[0]; };
+    tutorPc.ontrack = (e) => {
+      if (!tutorAudioEl) return;
+      tutorAudioEl.srcObject = e.streams[0];
+      tutorAudioEl.play().catch(() => {
+        // Autoplay blocked — surface a tap-to-unmute button (a fresh gesture always works)
+        tutorNeedsTap = true;
+        if (currentTab === 'tutor') render();
+      });
+    };
     tutorMic.getTracks().forEach(t => tutorPc.addTrack(t, tutorMic));
     tutorDc = tutorPc.createDataChannel('oai-events');
     tutorDc.onmessage = (e) => handleTutorEvent(e.data);
@@ -1558,7 +1578,12 @@ function cleanupTutor() {
   if (tutorDc) { try { tutorDc.close(); } catch (e) {} tutorDc = null; }
   if (tutorPc) { try { tutorPc.close(); } catch (e) {} tutorPc = null; }
   if (tutorMic) { tutorMic.getTracks().forEach(t => t.stop()); tutorMic = null; }
-  if (tutorAudioEl) { try { tutorAudioEl.pause(); } catch (e) {} tutorAudioEl = null; }
+  if (tutorAudioEl) {
+    try { tutorAudioEl.pause(); } catch (e) {}
+    try { tutorAudioEl.remove(); } catch (e) {}
+    tutorAudioEl = null;
+  }
+  tutorNeedsTap = false;
   tutorStartedAt = 0;
 }
 
@@ -1592,6 +1617,10 @@ function renderTutor() {
           ${live ? '⏹' : connecting ? '…' : '🎙'}
         </div>
         <div class="tutor-btn-label">${live ? 'Tap to end' : connecting ? 'Setting up the call…' : 'Tap to start a session'}</div>
+        ${live && tutorNeedsTap ? `
+        <div class="tutor-controls">
+          <button class="fc-btn primary" onclick="tutorUnmuteTap()">🔊 Tap to hear the tutor</button>
+        </div>` : ''}
         ${live ? `
         <div class="tutor-controls">
           <button class="fc-btn" onclick="toggleTutorMute()">${tutorMuted ? '🔇 Unmute mic' : '🎤 Mute mic'}</button>
