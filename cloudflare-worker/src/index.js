@@ -56,13 +56,16 @@ export default {
     // but /ai, /tts and /voice-token spend real money and this repo is public.
     // Set once with: wrangler secret put SYNC_PASS  (same value as the app's ⚙ sync passphrase)
     if (['/ai', '/tts', '/voice-token'].includes(url.pathname)) {
-      if (!env.SYNC_PASS) {
+      // Trim the secret: pasting into `wrangler secret put` can capture a trailing
+      // newline/space, and the app trims its side before sending.
+      const expectedPass = (env.SYNC_PASS || '').trim();
+      if (!expectedPass) {
         // /ai and /tts predate SYNC_PASS — they keep working until the secret exists.
         // /voice-token is new and never runs unauthenticated.
         if (url.pathname === '/voice-token') {
           return json({ error: 'Voice tutor not configured: set the SYNC_PASS secret first' }, 503, cors);
         }
-      } else if (pass !== env.SYNC_PASS) {
+      } else if (pass !== expectedPass) {
         return json({ error: 'wrong passphrase' }, 403, cors);
       }
     }
