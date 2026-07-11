@@ -51,6 +51,22 @@ export default {
       return json({ error: 'passphrase must be at least 12 characters' }, 400, cors);
     }
 
+    // Cost-bearing endpoints must match the SYNC_PASS secret exactly. /known and
+    // /custom stay namespace-per-pass (a wrong pass just reads an empty namespace),
+    // but /ai, /tts and /voice-token spend real money and this repo is public.
+    // Set once with: wrangler secret put SYNC_PASS  (same value as the app's ⚙ sync passphrase)
+    if (['/ai', '/tts', '/voice-token'].includes(url.pathname)) {
+      if (!env.SYNC_PASS) {
+        // /ai and /tts predate SYNC_PASS — they keep working until the secret exists.
+        // /voice-token is new and never runs unauthenticated.
+        if (url.pathname === '/voice-token') {
+          return json({ error: 'Voice tutor not configured: set the SYNC_PASS secret first' }, 503, cors);
+        }
+      } else if (pass !== env.SYNC_PASS) {
+        return json({ error: 'wrong passphrase' }, 403, cors);
+      }
+    }
+
     // /known — Set<string> of Italian words the user has marked known
     if (url.pathname === '/known') {
       const key = `known:${pass}`;
